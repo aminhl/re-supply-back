@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const validator = require('validator').default;
+const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
   firstName: {
@@ -18,6 +20,7 @@ const userSchema = new mongoose.Schema({
     required: [true, 'A user must have an email address'],
     unique: true,
     lowercase: true,
+    validate: [validator.isEmail, 'Please provide a valid email address'],
   },
   image: {
     type: String,
@@ -30,6 +33,12 @@ const userSchema = new mongoose.Schema({
   confirmPassword: {
     type: String,
     required: [true, 'Please confirm your password'],
+    validate: {
+      // This only works on CREATE & SAVE!!!
+      validator: function (previousPassword) {
+        return previousPassword === this.password;
+      },
+    },
   },
   joinedAt: {
     type: Date,
@@ -38,6 +47,11 @@ const userSchema = new mongoose.Schema({
   /* more props ll be added later   */
 });
 
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+  this.password = await bcrypt.hash(this.password, 12);
+  this.confirmPassword = undefined;
+});
 const User = mongoose.model('User', userSchema);
 
 module.exports = User;
