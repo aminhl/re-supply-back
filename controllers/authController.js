@@ -20,7 +20,6 @@ exports.signup = async (req, res) => {
   try {
     res.status(201).json({
       status: 'success',
-      token,
       data: {
         user,
       },
