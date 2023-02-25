@@ -19,7 +19,12 @@ const supplySchema = new mongoose.Schema({
     },
     image: {
         type: String,
-        required: [true, 'A supply must have an image'],
+
+    },
+    status: {
+        type: String,
+        enum: ['accepted', 'pending', 'rejected'],
+        default: 'pending'
     },
     postedAt: {
         type: Date,
