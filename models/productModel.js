@@ -14,9 +14,6 @@ const productSchema = new mongoose.Schema({
         type: Number,
         required: [true, 'A product must have a price'],
     },
-    quantity: {
-        type: Number,
-    },
     image: {
         type: String,
 
@@ -29,6 +26,10 @@ const productSchema = new mongoose.Schema({
     postedAt: {
         type: Date,
         default: Date.now()
+    },
+    user: {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User',
     }
 });
 

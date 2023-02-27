@@ -1,28 +1,34 @@
 const Product = require('../models/productModel');
 const AppError = require('./../utils/appError');
-
+const User = require('../models/userModel');
 
 
 
 exports.addProduct = async (req, res, next) => {
-  const product = await Product.create({
-    name: req.body.name,
-    description: req.body.description,
-    price: req.body.price,
-    quantity: req.body.quantity,
-    image: req.body.image,
-  });
-  try {
-    res.status(201).json({
-      status: 'success',
-      data: {
-        product: product,
-      },
-    });
-  } catch (err) {
-    return next(new AppError(err, 500));
-  }
+    try {
+        const product = await Product.create({
+            name: req.body.name,
+            description: req.body.description,
+            price: req.body.price,
+            image: req.body.image,
+            user: req.body.user,
+        });
+
+        // Populate the `user` field of the product with the details of the user that owns it
+        const populatedProduct = await product.populate('user')
+
+        res.status(201).json({
+            status: 'success',
+            data: {
+                product: populatedProduct,
+            },
+        });
+    } catch (err) {
+        return next(new AppError(err, 500));
+    }
 };
+
+
 
 exports.getAllProducts = async (req, res, next) => {
   const products = await Product.find();
@@ -45,7 +51,7 @@ exports.getProduct = async (req, res, next) => {
     res.status(200).json({
       status: 'success',
       data: {
-        supply: product,
+        product: product,
       },
     });
   } catch (err) {
@@ -106,7 +112,7 @@ exports.acceptProduct = async (req, res, next) => {
         res.status(200).json({
         status: 'success',
         data: {
-            supply: product,
+            product: product,
         },
         });
     } catch (err) {

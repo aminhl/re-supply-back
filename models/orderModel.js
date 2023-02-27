@@ -6,19 +6,23 @@ const orderSchema = new mongoose.Schema({
         {
             product: {
                 type: mongoose.Schema.ObjectId,
-                ref: 'Profuct',
+                ref: 'Product',
 
             }}],
-    quantity: {
-        type: Number,
-        required: [true, 'An order must have a quantity'],
-    },
     totalPrice: {
         type: Number,
     },
     createdAt: {
         type: Date,
         default: Date.now(),
+    },
+    postedBy: {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User',
+    },
+    receivedBy: {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User',
     }
 });
 module.exports = mongoose.model('Order', orderSchema);
