@@ -16,7 +16,7 @@ app.use(express.json());
 if (process.env.NODE_ENV === 'development') app.use(morgan('dev'));
 
 app.use('/api/v1/users', userRouter);
-app.use('/api/v1/supplies', productRouter);
+app.use('/api/v1/products', productRouter);
 app.use('/api/v1/feedbacks', feedbackRouter);
 app.use('/api/v1/donations', donationRouter);
 app.use('/api/v1/orders', orderRouter);
