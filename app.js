@@ -1,7 +1,7 @@
 const express = require('express');
 const morgan = require('morgan');
 const userRouter = require('./routes/userRoutes');
-const supplyRouter = require('./routes/supplyRoutes');
+const productRouter = require('./routes/productRoutes');
 const feedbackRouter = require('./routes/feedbackRoutes');
 
 const donationRouter = require('./routes/donationRoutes');
@@ -16,7 +16,7 @@ app.use(express.json());
 if (process.env.NODE_ENV === 'development') app.use(morgan('dev'));
 
 app.use('/api/v1/users', userRouter);
-app.use('/api/v1/supplies', supplyRouter);
+app.use('/api/v1/supplies', productRouter);
 app.use('/api/v1/feedbacks', feedbackRouter);
 app.use('/api/v1/donations', donationRouter);
 app.use('/api/v1/orders', orderRouter);

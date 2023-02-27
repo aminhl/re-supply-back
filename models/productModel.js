@@ -1,18 +1,18 @@
 const mongoose = require('mongoose');
 
 
-const supplySchema = new mongoose.Schema({
+const productSchema = new mongoose.Schema({
     name: {
         type: String,
-        required: [true, 'A supply must have a name'],
+        required: [true, 'A product must have a name'],
     },
     description: {
         type: String,
-        required: [true, 'A supply must have a description'],
+        required: [true, 'A product must have a description'],
     },
     price: {
         type: Number,
-        required: [true, 'A supply must have a price'],
+        required: [true, 'A product must have a price'],
     },
     quantity: {
         type: Number,
@@ -32,4 +32,4 @@ const supplySchema = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model('Supply', supplySchema);
+module.exports = mongoose.model('Product', productSchema);

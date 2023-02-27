@@ -4,10 +4,10 @@ const AppError = require('../utils/appError');
 
 exports.createOrder = async (req, res, next) => {
     try {
-        const { supplies } = req.body;
+        const { products } = req.body;
 
         // Calculate total price and total quantity based on supplies
-        const { totalPrice, totalQuantity } = supplies.reduce(
+        const { totalPrice, totalQuantity } = products.reduce(
             (acc, curr) => {
                 const { quantity, price } = curr;
                 const total = price * quantity;
@@ -21,7 +21,7 @@ exports.createOrder = async (req, res, next) => {
 
         // Create new order
         const order = await Order.create({
-            supplies,
+            products,
             quantity: totalQuantity,
             totalPrice,
         });
@@ -40,7 +40,7 @@ exports.createOrder = async (req, res, next) => {
 
 exports.getAllOrders = async (req, res, next) => {
     try {
-        const orders = await Order.find().populate('supplies.supply');
+        const orders = await Order.find().populate('products.product');
 
         res.status(200).json({
             status: 'success',
@@ -92,19 +92,19 @@ exports.deleteOrder = async (req, res, next) => {
 
 exports.updateOrder = async (req, res, next) => {
     try {
-        const { supplies, quantity } = req.body;
+        const { products, quantity } = req.body;
         const { id } = req.params;
 
-        // Check if supplies are valid numbers
-        const isValid = supplies.every(
+        // Check if products are valid numbers
+        const isValid = products.every(
             ({ quantity, price }) => !isNaN(price) && !isNaN(quantity)
         );
         if (!isValid) {
-            return next(new AppError(`Invalid Supply data`, 404));
+            return next(new AppError(`Invalid products data`, 404));
         }
 
-        // Calculate total price and total quantity based on supplies
-        const { totalPrice, totalQuantity } = supplies.reduce(
+        // Calculate total price and total quantity based on products
+        const { totalPrice, totalQuantity } = products.reduce(
             (acc, curr) => {
                 const { quantity, price } = curr;
                 const total = price * quantity;
@@ -120,7 +120,7 @@ exports.updateOrder = async (req, res, next) => {
         const order = await Order.findByIdAndUpdate(
             id,
             {
-                supplies,
+                products,
                 quantity: totalQuantity,
                 totalPrice,
             },
