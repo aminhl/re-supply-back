@@ -1,6 +1,9 @@
 const Supply = require('./../models/supplyModel');
 const AppError = require('./../utils/appError');
 
+
+
+
 exports.addSupply = async (req, res, next) => {
   const supply = await Supply.create({
     name: req.body.name,

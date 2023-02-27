@@ -53,7 +53,7 @@ exports.deleteFeedback = async (req, res, next) => {
         if (!feedback) {
             return next(new AppError(`Feedback not found`, 404));
         }
-        res.status(204).json({
+        res.status(200).json({
             status: 'success',
             message: 'Feedback deleted successfully.',
         });
