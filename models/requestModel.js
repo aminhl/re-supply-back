@@ -1,15 +1,10 @@
 const mongoose = require('mongoose');
 
-const DonationSchema = new mongoose.Schema(
+const RequestSchema = new mongoose.Schema(
     {
-        donor_id: {
+        requester_id: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
-            required: true,
-        },
-        request_id: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Request',
             required: true,
         },
         type: {
@@ -17,9 +12,13 @@ const DonationSchema = new mongoose.Schema(
             enum: ['Item', 'Currency'],
             required: true,
         },
-        value: {
+        targetValue: {
             type: Number,
             required: true,
+        },
+        currentValue: {
+            type: Number,
+            default: 0,
         },
         postedAt: {
             type: Date,
@@ -33,6 +32,6 @@ const DonationSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-const Donation = mongoose.model('Donation', DonationSchema);
+const Request = mongoose.model('Request', RequestSchema);
 
-module.exports = Donation;
+module.exports = Request;
