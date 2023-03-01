@@ -16,11 +16,7 @@ const orderSchema = new mongoose.Schema({
         type: Date,
         default: Date.now(),
     },
-    postedBy: {
-        type: mongoose.Schema.ObjectId,
-        ref: 'User',
-    },
-    receivedBy: {
+    user: {
         type: mongoose.Schema.ObjectId,
         ref: 'User',
     }
