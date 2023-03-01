@@ -16,8 +16,7 @@ exports.createOrder = async (req, res, next) => {
         const order = await Order.create({
             products,
             totalPrice,
-            postedBy: req.body.postedBy,
-            receivedBy: req.body.receivedBy,
+            user: req.user.id,
         });
 
         res.status(201).json({
