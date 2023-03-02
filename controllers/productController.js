@@ -6,12 +6,14 @@ const User = require('../models/userModel');
 
 exports.addProduct = async (req, res, next) => {
     try {
+        const status = req.user.role === 'admin' ? 'accepted' : 'pending';
         const product = await Product.create({
             name: req.body.name,
             description: req.body.description,
             price: req.body.price,
             image: req.body.image,
-            user: req.body.user,
+            user: req.user.id,
+            status: status,
         });
 
         // Populate the `user` field of the product with the details of the user that owns it
