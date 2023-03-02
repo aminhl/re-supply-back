@@ -84,7 +84,7 @@ exports.respondToExchangeRequest = async (req, res, next) => {
             });
         } else if (req.body.action === 'reject') {
             exchangeRequest.status = 'rejected';
-            await exchangeRequest.save();
+            await exchangeRequest.findByIdAndDelete(req.params.id);
 
             res.status(200).json({
                 status: 'success',
@@ -101,3 +101,22 @@ exports.respondToExchangeRequest = async (req, res, next) => {
     }
 };
 
+exports.getAllExchangeRequests = async (req, res, next) => {
+    try {
+        const exchangeRequests = await Exchange.find()
+            .populate('fromUser', 'firstName lastName email')
+            .populate('toUser', 'firstName lastName email')
+            .populate('fromProduct')
+            .populate('toProduct')
+            .exec();
+
+        res.status(200).json({
+            status: 'success',
+            data: {
+                exchangeRequests
+            }
+        });
+    } catch (err) {
+        return next(new AppError(err, 500));
+    }
+}
