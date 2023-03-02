@@ -8,9 +8,13 @@ const donationRouter = require('./routes/donationRoutes');
 const orderRouter = require('./routes/orderRoutes');
 const resourceRouter = require('./routes/resourceRoutes');
 
+const requestRouter = require('./routes/requestRoutes');
+
+
 const commentRouter = require('./routes/commentRoutes')
 const articleRouter = require ('./routes/articleRoutes')
 const exchangeRouter = require('./routes/exchangeRoutes');
+
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
 
@@ -24,6 +28,7 @@ app.use('/api/v1/users', userRouter);
 app.use('/api/v1/products', productRouter);
 app.use('/api/v1/feedbacks', feedbackRouter);
 app.use('/api/v1/donations', donationRouter);
+app.use('/api/v1/requests', requestRouter);
 app.use('/api/v1/orders', orderRouter);
 app.use('/api/v1/resources',resourceRouter );
 app.use('/api/v1/comments',commentRouter );
