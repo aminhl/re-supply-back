@@ -22,6 +22,7 @@ const app = express();
 
 // MIDDLEWARES
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 if (process.env.NODE_ENV === 'development') app.use(morgan('dev'));
 
 app.use('/api/v1/users', userRouter);
@@ -34,6 +35,10 @@ app.use('/api/v1/resources',resourceRouter );
 app.use('/api/v1/comments',commentRouter );
 app.use('/api/v1/articles',articleRouter );
 app.use('/api/v1/exchanges', exchangeRouter);
+
+app.get('/success', (req, res) => {
+    res.send('Success');
+});
 
 app.all('*', (req, res, next) => {
   next(new AppError(`can't find ${req.originalUrl} on this server`, 404));

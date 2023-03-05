@@ -1,36 +1,51 @@
 const Product = require('../models/productModel');
 const AppError = require('./../utils/appError');
-const User = require('../models/userModel');
+const multer = require('multer');
+const path = require('path');
 
-
-
-exports.addProduct = async (req, res, next) => {
-    try {
-        const status = req.user.role === 'admin' ? 'accepted' : 'pending';
-        const product = await Product.create({
-            name: req.body.name,
-            description: req.body.description,
-            price: req.body.price,
-            image: req.body.image,
-            user: req.user.id,
-            status: status,
-        });
-
-        // Populate the `user` field of the product with the details of the user that owns it
-        const populatedProduct = await product.populate('user')
-
-        res.status(201).json({
-            status: 'success',
-            data: {
-                product: populatedProduct,
-            },
-        });
-    } catch (err) {
-        return next(new AppError(err, 500));
+// Set up the storage for uploaded images
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'public/uploads/');
+    },
+    filename: function (req, file, cb) {
+        const ext = path.extname(file.originalname);
+        cb(null, Date.now() + ext);
     }
-};
+});
 
+// Create the multer upload object
+const upload = multer({ storage: storage });
 
+// Controller to create a new product
+exports.addProduct = [
+    // Use multer middleware to handle the form data
+    upload.array('images', 5),
+
+    async (req, res, next) => {
+        try {
+            // Create a new product with the data from the request body
+            const product = new Product({
+                name: req.body.name,
+                description: req.body.description,
+                price: req.body.price,
+                images: req.files ? req.files.map((file) => `/uploads/${file.filename}`) : []
+            });
+
+            // Save the product to the database
+            await product.save();
+
+            res.status(201).json({
+                status: 'success',
+                data: {
+                    product
+                }
+            });
+        } catch (err) {
+            return next(err);
+        }
+    }
+];
 
 exports.getAllProducts = async (req, res, next) => {
   const products = await Product.find();
