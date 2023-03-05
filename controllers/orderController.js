@@ -1,28 +1,54 @@
+require('dotenv').config();
 const Order = require('../models/orderModel');
+const Product = require('../models/productModel');
 const AppError = require('../utils/appError');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 
 exports.createOrder = async (req, res, next) => {
     try {
         const { products } = req.body;
 
-        // Calculate total price based on products
-        const totalPrice = products.reduce(
-            (acc, curr) => acc + curr.price,
-            0
-        );
-
         // Create new order
         const order = await Order.create({
             products,
-            totalPrice,
             user: req.user.id,
+        });
+
+        // Retrieve product data from the database
+        const productData = await Promise.all(
+            products.map((product) => Product.findById(product.product))
+        );
+
+        // Create a line item for each product
+        const lineItems = productData.map((product, index) => ({
+            price_data: {
+                currency: 'usd',
+                unit_amount: product.price * 100,
+                product_data: {
+                    name: product.name,
+                    description: product.description,
+                    images: [product.image],
+                },
+            },
+            quantity: products[index].quantity || 1,
+        }));
+
+        // Create a checkout session with the line items
+        const session = await stripe.checkout.sessions.create({
+            payment_method_types: ['card'],
+            line_items: lineItems,
+            mode: 'payment',
+            success_url: `${process.env.CLIENT_URL}/success`,
+            cancel_url: `${process.env.CLIENT_URL}/failed`,
         });
 
         res.status(201).json({
             status: 'success',
             data: {
                 order,
+                sessionId: session.id, // Return the session ID to the client
+                checkoutUrl: session.url,
             },
         });
     } catch (err) {

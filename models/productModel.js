@@ -14,10 +14,7 @@ const productSchema = new mongoose.Schema({
         type: Number,
         required: [true, 'A product must have a price'],
     },
-    image: {
-        type: String,
-
-    },
+    images: [String],
     status: {
         type: String,
         enum: ['accepted', 'pending', 'rejected'],
