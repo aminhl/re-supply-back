@@ -10,4 +10,5 @@ router.route("/reject/:id").patch(authController.protect, authController.restric
 router.route("/accepted").get(authController.protect, authController.restrictTo("admin","member") ,productController.getAcceptedProducts);
 router.route("/pending").get(authController.protect, authController.restrictTo("admin") ,productController.getPendingProducts);
 router.route("/get/:id").get(authController.protect, authController.restrictTo("admin","member") ,productController.getProduct);
+router.route("/search").get(authController.protect, authController.restrictTo("admin","member") ,productController.searchProducts);
 module.exports = router;
