@@ -2,6 +2,7 @@ const Product = require('../models/productModel');
 const AppError = require('./../utils/appError');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs/promises');
 
 // Set up the storage for uploaded images
 const storage = multer.diskStorage({
@@ -87,23 +88,45 @@ exports.deleteProduct = async (req, res, next) => {
     return next(new AppError(err, 500));
   }
 };
-exports.updateProduct = async (req, res, next) => {
-  try {
-    const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-    if (!product) return next(new AppError(`Product not found`, 404));
-    res.status(200).json({
-      status: 'success',
-      data: {
-        product: product,
-      },
-    });
-  } catch (err) {
-    return next(new AppError(err, 500));
-  }
-};
+exports.updateProduct = [
+    // Use multer middleware to handle the form data
+    upload.array('images', 5),
+
+    async (req, res, next) => {
+        try {
+            // Find the product to update by ID
+            const product = await Product.findById(req.params.id);
+
+            if (!product) {
+                return next(new AppError('Product not found', 404));
+            }
+
+            // Delete the first image from the server if it exists
+            if (product.images.length > 0) {
+                const imagePath = path.join(__dirname, '..', 'public', product.images[0]);
+                await fs.unlink(imagePath);
+            }
+
+            // Update the product with the new data
+            product.name = req.body.name;
+            product.description = req.body.description;
+            product.price = req.body.price;
+            product.images = req.files ? req.files.map((file) => `/uploads/${file.filename}`) : [];
+
+            // Save the updated product to the database
+            await product.save();
+
+            res.status(200).json({
+                status: 'success',
+                data: {
+                    product
+                }
+            });
+        } catch (err) {
+            return next(err);
+        }
+    }
+];
 
 exports.getPendingProducts = async (req, res, next) => {
     const products = await Product.find({status: 'pending'}); // only pending supplies
@@ -165,5 +188,27 @@ exports.getAcceptedProducts = async (req, res, next) => {
         });
     } catch (err) {
         return next(new AppError(err, 500));
+    }
+};
+
+exports.searchProducts = async (req, res, next) => {
+    try {
+        const { query } = req.query;
+
+        const products = await Product.find({
+            $or: [
+                { name: { $regex: query, $options: 'i' } },
+                { description: { $regex: query, $options: 'i' } },
+            ],
+        });
+
+        res.status(200).json({
+            status: 'success',
+            data: {
+                products,
+            },
+        });
+    } catch (err) {
+        return next(err);
     }
 };
