@@ -13,6 +13,7 @@ router.patch('/updatePassword', authController.protect, authController.updatePas
 
 // User Routes
 router.patch('/updateProfile', authController.protect, userController.updateProfile);
+router.delete('/deactivateAccount', authController.protect, userController.deactivateAccount);
 router.route('/').get(authController.protect, authController.restrictTo("admin",""),userController.getAllUsers);
 
 module.exports = router;

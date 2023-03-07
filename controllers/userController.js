@@ -10,7 +10,7 @@ const filterObj = (obj, ...allowedFields) => {
 }
 
 exports.getAllUsers = async (req, res) => {
-  const users = await userModel.find();
+  const users = await User.find();
   res.status(200).json({
     status: 'success',
     data: {
@@ -37,4 +37,12 @@ exports.updateProfile = async (req, res, next) => {
       user: updatedUser
     }
   })
+}
+
+exports.deactivateAccount = async (req, res, next) => {
+    await User.findByIdAndUpdate(req.user.id, { active: false });
+    res.status(204).json({
+        status: 'success',
+        data: null
+    })
 }
