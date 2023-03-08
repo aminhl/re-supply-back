@@ -4,7 +4,8 @@ const crypto = require('crypto');
 const User = require('./../models/userModel');
 const AppError = require('./../utils/appError');
 const sendEmail = require('./../utils/email');
-
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const signToken = (id) => {
   return jwt.sign({ id: id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN,
@@ -132,3 +133,79 @@ exports.resetPassword = async (req, res, next) => {
     token
   })
 }
+
+//implement Passport Google OAuth
+
+passport.use(
+    new GoogleStrategy(
+        {
+          // options for the Google strategy
+          callbackURL: process.env.CALLBACK_URL,
+          clientID: process.env.GOOGLE_CLIENT_ID,
+          clientSecret: process.env.GOOGLE_CLIENT_SECRET
+        },
+        async (accessToken, refreshToken, profile, done) => {
+          try {
+            // check if user already exists in our database
+            let user = await User.findOne({ email: profile.emails[0].value });
+            if (!user) {
+              // create new user
+              user = await User.create({
+                firstName: profile.name.givenName,
+                lastName: profile.name.familyName,
+                email: profile.emails[0].value,
+                image: profile.photos[0].value,
+              });
+            }
+            // return user object
+            return done(null, user);
+          } catch (err) {
+            return done(err);
+          }
+        }
+    )
+);
+
+// authenticate with google
+exports.googleAuth = passport.authenticate('google', {
+  scope: ['profile', 'email']
+});
+
+// callback route for google to redirect to
+exports.googleAuthRedirect = passport.authenticate('google', {
+  failureRedirect: '/login',
+  session: false
+});
+
+
+// function to send token as response
+const createSendToken = (user, statusCode, res) => {
+  const token = signToken(user._id);
+  res.status(statusCode).json({
+    status: 'success',
+    token,
+    data: {
+      user
+    }
+  });
+};
+
+// handle user after authentication
+exports.handleGoogleAuth = (req, res) => {
+  createSendToken(req.user, 200, res);
+};
+
+// login with google
+exports.googleLogin = passport.authenticate('google', {
+  scope: ['profile', 'email']
+});
+
+// callback route for google to redirect to after authentication
+exports.googleLoginCallback = passport.authenticate('google', {
+  failureRedirect: '/login',
+  session: false
+}), (req, res) => {
+  // create and send a token to the client
+  const token = generateToken(req.user);
+  res.status(200).json({ status: 'success', token });
+};

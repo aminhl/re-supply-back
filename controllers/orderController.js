@@ -58,6 +58,7 @@ exports.createOrder = async (req, res, next) => {
 
 
 
+
 exports.getAllOrders = async (req, res, next) => {
     try {
         const orders = await Order.find().populate('products.product');
@@ -76,7 +77,7 @@ exports.getAllOrders = async (req, res, next) => {
 
 exports.getOrder = async (req, res, next) => {
     try {
-        const order = await Order.findById(req.params.id);
+        const order = await Order.findById(req.query.order_id);
         if (!order) return next(new AppError(`Order not found`, 404));
         res.status(200).json({
             status: 'success',
@@ -149,5 +150,9 @@ exports.updateOrder = async (req, res, next) => {
         return next(err);
     }
 };
+
+exports.SuccessMessage = async (req, res, next) => {
+    res.send("Success");
+}
 
 
