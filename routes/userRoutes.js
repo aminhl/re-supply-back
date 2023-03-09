@@ -3,8 +3,6 @@ const authController = require('../controllers/authController');
 const userController = require('../controllers/userController');
 const passport = require('passport');
 
-
-
 const router = express.Router();
 
 // Authentication Routes
