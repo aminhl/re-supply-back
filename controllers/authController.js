@@ -185,19 +185,6 @@ exports.googleAuthRedirect = passport.authenticate('google', {
   session: false
 });
 
-
-// function to send token as response
-const createSendToken = (user, statusCode, res) => {
-  const token = signToken(user._id);
-  res.status(statusCode).json({
-    status: 'success',
-    token,
-    data: {
-      user
-    }
-  });
-};
-
 // handle user after authentication
 exports.handleGoogleAuth = (req, res) => {
   createSendToken(req.user, 200, res);
