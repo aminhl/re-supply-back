@@ -34,9 +34,7 @@ const userSchema = new mongoose.Schema({
       message: 'Please provide a valid email address',
     },
   },
-  image: {
-    type: String,
-  },
+  images: [String],
   password: {
     type: String,
     minlength: 8,

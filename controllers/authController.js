@@ -8,6 +8,23 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const FacebookStrategy = require('passport-facebook').Strategy;
 const { v4: uuidv4 } = require('uuid');
+const multer = require('multer');
+const path = require('path');
+
+
+// Set up the storage for uploaded images
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'public/uploads/users/');
+  },
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname);
+    cb(null, Date.now() + ext);
+  }
+});
+
+// Create the multer upload object
+const upload = multer({ storage: storage });
 const signToken = (id) => {
   return jwt.sign({ id: id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN,
@@ -33,13 +50,15 @@ const createSendToken = (user, statusCode, res) => {
   });
 }
 
-exports.signup = async (req, res, next) => {
+exports.signup = [
+  // Use multer middleware to handle the form data
+  upload.array('images', 2), async (req, res, next) => {
   const user = await User.create({
     firstName: req.body.firstName,
     lastName: req.body.lastName,
     phoneNumber: req.body.phoneNumber,
     email: req.body.email,
-    image: req.body.image,
+    images: req.files ? req.files.map((file) => `/uploads/users/${file.filename}`) : [],
     password: req.body.password,
     confirmPassword: req.body.confirmPassword,
     passwordChangedAt: req.body.passwordChangedAt
@@ -49,7 +68,7 @@ exports.signup = async (req, res, next) => {
   } catch (err) {
     return next(new AppError(err, 500))
   }
-};
+}];
 
 exports.login = async (req, res, next) => {
   const { email, password } = req.body;
