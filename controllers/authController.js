@@ -62,6 +62,16 @@ exports.login = async (req, res, next) => {
   createSendToken(user, 200, res)
 };
 
+exports.checkEmail = async (req, res, next) => {
+  const email = req.body.email;
+  try {
+    const user = await User.findOne({ email });
+    if (user) res.json({ exists: true });
+    else res.json({ exists: false });
+  } catch (err) {
+    return next(new AppError(err));
+  }
+}
 
 exports.protect = async (req, res, next) => {
   // 1) Getting token & check of it there

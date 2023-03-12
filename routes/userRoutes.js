@@ -9,7 +9,7 @@ const router = express.Router();
 router.post('/signup', authController.signup);
 router.post('/login', authController.login);
 router.post('/forgotPassword', authController.forgotPassword);
-
+router.post('/checkEmail', authController.checkEmail);
 router.get('/auth/google', authController.googleAuth);
 router.get('/auth/google/redirect', authController.googleAuthRedirect, authController.handleGoogleAuth);
 router.get('/auth/google/login', authController.googleLogin);
