@@ -5,7 +5,7 @@ const passport = require('passport');
 
 const router = express.Router();
 
-// Authentication Routes
+// Authentication Routes9
 router.post('/signup', authController.signup);
 router.post('/login', authController.login);
 router.post('/forgotPassword', authController.forgotPassword);
@@ -22,3 +22,7 @@ router.delete('/deactivateAccount', authController.protect, userController.deact
 router.route('/').get(authController.protect, authController.restrictTo("admin",""),userController.getAllUsers);
 
 module.exports = router;
+router.route('/auth/facebook').get(authController.facebookAuth);
+router.route('/auth/facebook/redirect').get(authController.facebookAuthRedirect, authController.handleFacebookAuth);
+router.route('/auth/facebook/login').get(authController.facebookLogin);
+router.route('/auth/facebook/login/redirect').get(authController.facebookLoginCallback);
