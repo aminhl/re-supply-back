@@ -6,6 +6,8 @@ const AppError = require('./../utils/appError');
 const sendEmail = require('./../utils/email');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const FacebookStrategy = require('passport-facebook').Strategy;
+const { v4: uuidv4 } = require('uuid');
 const signToken = (id) => {
   return jwt.sign({ id: id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN,
@@ -222,3 +224,69 @@ exports.updatePassword = async (req, res, next) => {
  createSendToken(user, 200, res);
 }
 
+
+passport.use(
+    new FacebookStrategy(
+        {
+          // options for the Facebook strategy
+          callbackURL: process.env.CALLBACK_URL_FACEBOOK,
+          clientID: process.env.FACEBOOK_APP_ID,
+          clientSecret: process.env.FACEBOOK_APP_SECRET,
+          profileFields: ['id', 'displayName', 'email', 'first_name', 'last_name', 'picture.type(large)'],
+        },
+        async (accessToken, refreshToken, profile, done) => {
+          try {
+            // check if user already exists in our database
+            let user = await User.findOne({ facebookId: profile.id });
+            if (!user) {
+              // generate a random unique email
+              const email = `${uuidv4()}@noemail.com`;
+
+              // create new user
+              const newUser = new User({
+                firstName: profile.name.givenName || profile.name.familyName,
+                lastName: profile.name.familyName || profile.name.givenName,
+                email: email,
+                facebookId: profile.id, // save Facebook ID to database
+                image: profile?.photos?.[0]?.value,
+              });
+              newUser.validateBeforeSave = false;
+              user = await newUser.save();
+            }
+            // return user object
+            return done(null, user);
+          } catch (err) {
+            return done(err);
+          }
+        }
+    )
+);
+// authenticate with Facebook
+exports.facebookAuth = passport.authenticate('facebook', { scope: ['email'] });
+
+// callback route for Facebook to redirect to
+exports.facebookAuthRedirect = passport.authenticate('facebook', {
+  failureRedirect: '/login',
+  session: false,
+});
+
+// handle user after authentication
+exports.handleFacebookAuth = async (req, res) => {
+  try {
+    createSendToken(req.user, 200, res);
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+};
+
+// login with Facebook
+exports.facebookLogin = passport.authenticate('facebook', { scope: ['email'] });
+
+// callback route for Facebook to redirect to after authentication
+exports.facebookLoginCallback = passport.authenticate('facebook', {
+  failureRedirect: '/login',
+  session: false,
+}), (req, res) => {
+  // create and send a token to the client
+  createSendToken(req.user, 200, res);
+};
