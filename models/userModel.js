@@ -65,6 +65,12 @@ const userSchema = new mongoose.Schema({
     default: true,
     select: false
   },
+  verified:{
+    type: Boolean,
+    default: false,
+  },
+  accountVerificationToken: String,
+  accountVerificationExpires: Date,
   facebookId: {
     type: String,
     index: { unique: true, sparse: true },
@@ -109,6 +115,13 @@ userSchema.methods.createPasswordResetToken = function(){
   this.passwordResetToken = crypto.createHash("sha256").update(resetToken).digest("hex");
   this.passwordResetExpires = Date.now() + 10*60*1000;
   return resetToken;
+}
+
+userSchema.methods.createAccountVerificationToken = function(){
+  const verifyToken = crypto.randomBytes(32).toString("hex");
+  this.accountVerificationToken = crypto.createHash("sha256").update(verifyToken).digest("hex");
+  this.accountVerificationExpires = Date.now() + 10*60*1000;
+  return verifyToken;
 }
 
 const User = mongoose.model('User', userSchema);
