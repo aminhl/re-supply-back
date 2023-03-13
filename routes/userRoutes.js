@@ -16,13 +16,16 @@ router.get('/auth/google/login', authController.googleLogin);
 router.get('/auth/google/login/redirect', authController.googleLoginCallback);
 router.patch('/resetPassword/:token', authController.resetPassword);
 router.patch('/updatePassword', authController.protect, authController.updatePassword);
+
+// OAuth routes
+router.route('/auth/facebook').get(authController.facebookAuth);
+router.route('/auth/facebook/redirect').get(authController.facebookAuthRedirect, authController.handleFacebookAuth);
+router.route('/auth/facebook/login').get(authController.facebookLogin);
+router.route('/auth/facebook/login/redirect').get(authController.facebookLoginCallback);
+
 // User Routes
 router.patch('/updateProfile', authController.protect, userController.updateProfile);
 router.delete('/deactivateAccount', authController.protect, userController.deactivateAccount);
 router.route('/').get(authController.protect, authController.restrictTo("admin",""),userController.getAllUsers);
 
 module.exports = router;
-router.route('/auth/facebook').get(authController.facebookAuth);
-router.route('/auth/facebook/redirect').get(authController.facebookAuthRedirect, authController.handleFacebookAuth);
-router.route('/auth/facebook/login').get(authController.facebookLogin);
-router.route('/auth/facebook/login/redirect').get(authController.facebookLoginCallback);
