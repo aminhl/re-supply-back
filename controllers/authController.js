@@ -25,14 +25,15 @@ const storage = multer.diskStorage({
 
 // Create the multer upload object
 const upload = multer({ storage: storage });
-const signToken = (id) => {
-  return jwt.sign({ id: id }, process.env.JWT_SECRET, {
+const signToken = (id, role, firstName, lastName, email) => {
+  return jwt.sign({ id: id, role: role, firstName: firstName, lastName: lastName, email: email },
+      process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
 };
 
 const createSendToken = (user, statusCode, res) => {
-  const token = signToken(user._id);
+  const token = signToken(user._id, user.role, user.firstName, user.lastName, user.email);
   const cookieOptions = {
     expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24*60*60*1000),
     httpOnly: true
