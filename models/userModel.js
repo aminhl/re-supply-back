@@ -65,6 +65,12 @@ const userSchema = new mongoose.Schema({
     default: true,
     select: false
   },
+  verified:{
+    type: Boolean,
+    default: false,
+  },
+  emailVerificationToken: String,
+  emailVerificationExpires: Date,
   facebookId: {
     type: String,
     index: { unique: true, sparse: true },

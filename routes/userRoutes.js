@@ -16,6 +16,7 @@ router.get('/auth/google/login', authController.googleLogin);
 router.get('/auth/google/login/redirect', authController.googleLoginCallback);
 router.patch('/resetPassword/:token', authController.resetPassword);
 router.patch('/updatePassword', authController.protect, authController.updatePassword);
+router.get('/verifyEmail/:token', authController.verifyEmail);
 // User Routes
 router.patch('/updateProfile', authController.protect, userController.updateProfile);
 router.delete('/deactivateAccount', authController.protect, userController.deactivateAccount);
