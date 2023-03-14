@@ -5,7 +5,7 @@ const passport = require('passport');
 
 const router = express.Router();
 
-// Authentication Routes9
+// Authentication Routes
 router.post('/signup', authController.signup);
 router.post('/login', authController.login);
 router.post('/forgotPassword', authController.forgotPassword);
