@@ -54,22 +54,78 @@ const createSendToken = (user, statusCode, res) => {
 exports.signup = [
   // Use multer middleware to handle the form data
   upload.array('images', 2), async (req, res, next) => {
-  const user = await User.create({
-    firstName: req.body.firstName,
-    lastName: req.body.lastName,
-    phoneNumber: req.body.phoneNumber,
-    email: req.body.email,
-    images: req.files ? req.files.map((file) => `/uploads/users/${file.filename}`) : [],
-    password: req.body.password,
-    confirmPassword: req.body.confirmPassword,
-    passwordChangedAt: req.body.passwordChangedAt
+    const { firstName, lastName, phoneNumber, email, password, confirmPassword } = req.body;
+
+    // Check if email already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return next(new AppError('This email is already taken.', 400));
+    }
+
+    // Create a random token
+    const token = crypto.randomBytes(32).toString('hex');
+
+    // Create a verification URL with the token
+    const verificationURL = `${req.protocol}://${req.get('host')}/api/v1/users/verifyEmail/${token}`;
+
+    // Save the token to the user document
+    const user = await User.create({
+      firstName,
+      lastName,
+      phoneNumber,
+      email,
+      images: req.files ? req.files.map((file) => `/uploads/users/${file.filename}`) : [],
+      password,
+      confirmPassword,
+      passwordChangedAt: req.body.passwordChangedAt,
+      emailVerificationToken: token,
+      emailVerificationExpires: Date.now() + 24 * 60 * 60 * 1000, // Token expires in 24 hours
+    });
+    console.log(user);
+
+    try {
+      // Send verification email
+      await sendEmail({
+        email: user.email,
+        subject: 'Please confirm your email',
+        message: `Please click the following link to confirm your email: ${verificationURL}`,
+      });
+
+      createSendToken(user, 201, res);
+    } catch (err) {
+      // If there's an error while sending email, delete the user
+      await user.remove();
+
+      return next(new AppError('There was an error sending the email. Please try again later.', 500));
+    }
+  },
+];
+
+exports.verifyEmail = async (req, res, next) => {
+  const { token } = req.params;
+
+  // Find the user with the given token and check if the token is still valid
+  const user = await User.findOne({
+    emailVerificationToken: token,
+    emailVerificationExpires: { $gt: Date.now() },
   });
-  try {
-    createSendToken(user, 200, res);
-  } catch (err) {
-    return next(new AppError(err, 500))
+
+  if (!user) {
+    return next(new AppError('Invalid or expired token.', 400));
   }
-}];
+
+  // Mark the user's email as verified and remove the verification token
+  user.emailVerificationToken = undefined;
+  user.emailVerificationExpires = undefined;
+  user.verified = true;
+  await user.save({ validateBeforeSave: false });
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Email verification successful.',
+  });
+};
+
 
 exports.login = async (req, res, next) => {
   const { email, password } = req.body;
