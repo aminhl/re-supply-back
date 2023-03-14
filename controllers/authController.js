@@ -81,7 +81,6 @@ exports.signup = [
       emailVerificationToken: token,
       emailVerificationExpires: Date.now() + 24 * 60 * 60 * 1000, // Token expires in 24 hours
     });
-    console.log(user);
 
     try {
       // Send verification email
