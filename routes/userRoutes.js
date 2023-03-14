@@ -29,8 +29,8 @@ router.route('/auth/facebook/login').get(authController.facebookLogin);
 router.route('/auth/facebook/login/redirect').get(authController.facebookLoginCallback);
 
 // User Routes
-router.patch('/updateProfile', authController.protect, userController.updateProfile);
+router.patch('/updateProfile', authController.protect, authController.restrictTo("admin","member"), userController.updateProfile);
 router.delete('/deactivateAccount', authController.protect, userController.deactivateAccount);
 router.route('/').get(authController.protect, authController.restrictTo("admin",""),userController.getAllUsers);
-
+router.route('/:id').patch(authController.protect, authController.restrictTo("admin","member"),userController.updateUser);
 module.exports = router;
