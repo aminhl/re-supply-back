@@ -179,14 +179,16 @@ exports.restrictTo = (...roles) => {
 
 exports.forgotPassword = async (req, res, next) => {
   // 1) Get User based on POSTed email
+  console.log(req.body)
   const user = await User.findOne({email: req.body.email})
-  if(!user) return next(new AppError(`There's no user with such email address`, 404));
+  if(!user) return next(new AppError(`There's no user with such email address= `+req.body.email, 404));
   // 2) Generate the random reset token
   const resetToken = user.createPasswordResetToken();
   await user.save({ validateBeforeSave: false});
   // 3) Send it to user's email address
   const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${resetToken}`;
-  const message = `Forgot your password ? Submit a PATCH request with your new password and passwordConfirm to ${resetURL}
+  const resetURLAngular = "http://localhost:4200/resetPasswordAfterSubmit?key="+resetToken;
+  const message = `Forgot your password ? Submit a PATCH request with your new password and passwordConfirm to ${resetURLAngular}
   If you didn't forgot your password, please ignore this email!`;
   try{
     await sendEmail({
