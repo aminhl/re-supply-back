@@ -68,7 +68,7 @@ exports.signup = [
 
         // Create a verification URL with the token
         const verificationURL = `${req.protocol}://${req.get('host')}/api/v1/users/verifyEmail/${token}`;
-
+        const verificationURLAng = "http://localhost:4200/verifyEmail?id="+token;
         // Save the token to the user document
         const user = await User.create({
             firstName,
@@ -89,7 +89,7 @@ exports.signup = [
             await sendEmail({
                 email: user.email,
                 subject: 'Please confirm your email',
-                message: `Please click the following link to confirm your email: ${verificationURL}`,
+                message: `Please click the following link to confirm your email: ${verificationURLAng}`,
             });
 
             createSendToken(user, 201, res);
