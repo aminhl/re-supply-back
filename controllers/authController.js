@@ -171,7 +171,7 @@ exports.login = async (req, res, next) => {
                     const verification = await client.verify.v2
                         .services(process.env.SERVICE_ID)
                         .verifications.create({
-                            to: `+216${userPhone}`,
+                            to: `${userPhone}`,
                             channel: 'sms',
                         });
 
@@ -184,7 +184,7 @@ exports.login = async (req, res, next) => {
                 } else {
                     // 3) Verify the code
                     const data = await client.verify.v2.services(process.env.SERVICE_ID).verificationChecks.create({
-                        to: `+216${userPhone}`,
+                        to: `${userPhone}`,
                         code: req.query.code,
                     });
 
