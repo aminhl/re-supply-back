@@ -135,89 +135,86 @@ const verifyUserPasswordAndEmail = async (email, password) => {
     }
     return user;
 }
+
+exports.enable2FA = async (req, res) => {
+    await User.findByIdAndUpdate(req.user.id, {twoFactorAuth: true});
+    res.status(204).json({
+        status: 'success',
+        data: null
+    })
+}
+
 // First part of the logic to handle initial login process and check for Two Factor Authentication
 exports.login = async (req, res, next) => {
     try {
         const {email, password} = req.body;
+
         // 1) Check if email & password exist
-        if (!email || !password)
+        if (!email || !password) {
             return next(new AppError(`Please provide an email and password`, 500));
+        }
+
         // 2) Check if user exists & password is correct
-        const user = verifyUserPasswordAndEmail(email, password)
+        const user = await verifyUserPasswordAndEmail(email, password);
 
         // 3) Check if two-factor authentication is enabled
-        const twoFactorAuth = (await User.findOne({email}).select('twoFactorAuth')).twoFactorAuth;
-        const userPhone = (await User.findOne({email}).select('phoneNumber')).phoneNumber;
+        const userObj = await User.findOne({email}).select('twoFactorAuth phoneNumber');
+        const twoFactorAuth = userObj.twoFactorAuth;
+        const userPhone = userObj.phoneNumber;
 
         if (!twoFactorAuth) {
             return createSendToken(user, 200, res);
+        } else if (twoFactorAuth === true) {
+            // If two-factor authentication is enabled, send a verification code to the user's phone
+            if (userPhone) {
+                if (!req.query.code) {
+                    const verification = await client.verify.v2
+                        .services(process.env.SERVICE_ID)
+                        .verifications.create({
+                            to: `+216${userPhone}`,
+                            channel: 'sms',
+                        });
 
-        }
+                    if (verification.status === 'pending') {
+                        res.status(200).send({
+                            message: 'Verification is sent!!',
+                        });
+                        return;
+                    }
+                } else {
+                    // 3) Verify the code
+                    const data = await client.verify.v2.services(process.env.SERVICE_ID).verificationChecks.create({
+                        to: `+216${userPhone}`,
+                        code: req.query.code,
+                    });
 
-        // If two-factor authentication is enabled, send a verification code to the user's phone
-        if (userPhone) {
-            const verification = await client.verify.v2
-                .services(process.env.SERVICE_ID)
-                .verifications.create({
-                    to: `+216${userPhone}`,
-                    channel: 'sms',
-                });
-
-            if (verification.status === 'pending') {
-                res.status(200).send({
-                    message: 'Verification is sent!!',
-                });
-                return;
+                    if (data.status === 'approved') {
+                        // If the code is verified, log in the user
+                        createSendToken(user, 200, res);
+                        return;
+                    } else {
+                        // If the code is not verified, send an error response
+                        return next(new AppError('Wrong verification code', 400));
+                    }
+                }
             }
-        }
+            // If the control comes here, it means that the two-factor authentication is enabled
+            if (!userPhone || TwoAuthStatus !== true) {
+                return next(new AppError('Two Factor Authentication is not enabled for this user', 400));
+            }
 
-        throw new AppError('Error sending verification code', 500);
+            // If the verification code is not provided, send an error response
+            if (!req.query.code) {
+                return next(new AppError(' verification code is required', 400));
+            }
+
+            throw new AppError('Error sending verification code', 500);
+        }
     } catch (error) {
         next(error);
     }
+
 };
-
-
-// Second part of the logic to handle verification of the code sent to the user's phone
-exports.loginWith2FA = async (req, res, next) => {
-    try {
-        const {email, password} = req.body;
-        // 1) Check if email & password exist
-        if (!email || !password)
-            return next(new AppError(`Please provide an email and password`, 500));
-        const user = verifyUserPasswordAndEmail(email, password)
-        const userPhone = (await User.findOne({email}).select('phoneNumber'))?.phoneNumber;
-        const TwoAuthStatus = (await User.findOne({email}).select('twoFactorAuth'))?.twoFactorAuth;
-
-        // 1) Validate user input
-        if (!req.query.code) {
-            return next(new AppError(' verification code is required', 400));
-        }
-
-        // 2) Handle edge cases
-        if (!userPhone || TwoAuthStatus !== true) {
-            return next(new AppError('Two Factor Authentication is not enabled for this user', 400));
-        }
-
-        // 3) Verify the code
-        const data = await client.verify.v2.services(process.env.SERVICE_ID).verificationChecks.create({
-            to: `+216${userPhone}`,
-            code: req.query.code,
-        });
-
-        if (data.status === 'approved') {
-            // If the code is verified, log in the user
-            createSendToken(user, 200, res);
-        } else {
-            // If the code is not verified, send an error response
-            return next(new AppError('Wrong verification code', 400));
-        }
-    } catch (err) {
-        // 4) Consistent error handling
-        return next(new AppError('Something went wrong in the verification process', 500));
-    }
-}
-
 
 exports.checkEmail = async (req, res, next) => {
     const email = req.body.email;
@@ -255,12 +252,6 @@ exports.protect = async (req, res, next) => {
     } catch (err) {
         return next(new AppError(`Token has expired`, 401));
     }
-    if (!freshUser) return next(new AppError(`The user belonging to this token does no longer exist`))
-    // 4) Check if user changed password after the token was issued
-    if (freshUser.changedPasswordAfter(decoded.iat)) return next(new AppError(`User recently changed password! Please login again`));
-    // GRANT ACCESS TO PROTECTED ROUTE
-    req.user = freshUser;
-    next();
 }
 
 exports.restrictTo = (...roles) => {
