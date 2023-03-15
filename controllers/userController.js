@@ -147,7 +147,7 @@ exports.updateUser = [
 
 exports.getUser = async (req, res, next) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findById(req.user.id);
     res.status(200).json({
       status: 'success',
       data: {
