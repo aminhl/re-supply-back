@@ -11,6 +11,7 @@ router.post('/login', authController.login);
 router.post('/enable2FA', authController.protect, authController.enable2FA);
 router.post('/forgotPassword', authController.forgotPassword);
 router.post('/checkEmail', authController.checkEmail);
+router.get('/email-verification/:id', userController.checkEmailVerification);
 
 // OAuth google routes
 router.get('/auth/google', authController.googleAuth);

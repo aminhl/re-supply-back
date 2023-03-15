@@ -113,18 +113,27 @@ exports.verifyEmail = async (req, res, next) => {
 
     if (!user) {
         return next(new AppError('Invalid or expired token.', 400));
-    }
+ 
+exports.verifyEmail = async (req, res, next) => {
+  const { token } = req.params;
 
-    // Mark the user's email as verified and remove the verification token
-    user.emailVerificationToken = undefined;
-    user.emailVerificationExpires = undefined;
-    user.verified = true;
-    await user.save({validateBeforeSave: false});
+  // Find the user with the given token and check if the token is still valid
+  const user = await User.findOne({
+    emailVerificationToken: token,
+    emailVerificationExpires: { $gt: Date.now() },
+  });
 
-    res.status(200).json({
-        status: 'success',
-        message: 'Email verification successful.',
-    });
+  if (!user) {
+    return next(new AppError('Invalid or expired token.', 400));
+  }
+
+  // Mark the user's email as verified and remove the verification token
+  user.emailVerificationToken = undefined;
+  user.emailVerificationExpires = undefined;
+  user.verified = true;
+  await user.save({ validateBeforeSave: false });
+
+  res.redirect('http://localhost:4200/verifyEmail');
 
 };
 // function to verify user  password
@@ -144,7 +153,9 @@ exports.enable2FA = async (req, res) => {
     })
 }
 
+
 // First part of the logic to handle initial login process and check for Two Factor Authentication
+
 exports.login = async (req, res, next) => {
     try {
         const {email, password} = req.body;
