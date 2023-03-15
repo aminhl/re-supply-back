@@ -158,3 +158,24 @@ exports.getUser = async (req, res, next) => {
     next(err);
   }
 }
+
+exports.checkEmailVerification = async (req, res, next) => {
+    const userId = req.params.id;
+
+    try {
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return next(new AppError('User not found', 404));
+        }
+
+        const isEmailVerified = user.verified;
+
+        res.status(200).json({
+            status: 'success',
+            verified: isEmailVerified,
+        });
+    } catch (err) {
+        return next(new AppError('Could not check email verification status', 500));
+    }
+};
