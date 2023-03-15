@@ -119,11 +119,9 @@ exports.verifyEmail = async (req, res, next) => {
   user.verified = true;
   await user.save({ validateBeforeSave: false });
 
-  res.status(200).json({
-    status: 'success',
-    message: 'Email verification successful.',
-  });
+  res.redirect('http://localhost:4200/verifyEmail');
 };
+
 
 
 exports.login = async (req, res, next) => {
