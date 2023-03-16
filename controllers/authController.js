@@ -16,7 +16,7 @@ const client = require('twilio')(process.env.ACCOUNT_SID, process.env.AUTH_TOKEN
 // Set up the storage for uploaded images
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, 'public/uploads/users/');
+        cb(null, 'C:\\Users\\ProtocolBlood\\Desktop\\re-supply-front\\src\\assets\\client\\images');
     },
     filename: function (req, file, cb) {
         const ext = path.extname(file.originalname);
