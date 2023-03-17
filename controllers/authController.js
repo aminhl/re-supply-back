@@ -11,21 +11,18 @@ const {v4: uuidv4} = require('uuid');
 const multer = require('multer');
 const path = require('path');
 const client = require('twilio')(process.env.ACCOUNT_SID, process.env.AUTH_TOKEN)
+const serviceAccount = require ("../firebase/resupply-379921-firebase-adminsdk-q6pue-381f5928cc.json");
+const admin = require ("firebase-admin");
 
-
-// Set up the storage for uploaded images
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'C:\\Users\\ProtocolBlood\\Desktop\\re-supply-front\\src\\assets\\client\\images');
-    },
-    filename: function (req, file, cb) {
-        const ext = path.extname(file.originalname);
-        cb(null, Date.now() + ext);
-    }
+// Initialize Firebase Admin SDK
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
 });
+const bucket = admin.storage().bucket();
 
 // Create the multer upload object
-const upload = multer({storage: storage});
+const upload = multer();
 const signToken = (id, role, firstName, lastName, email) => {
     return jwt.sign({id: id, role: role, firstName: firstName, lastName: lastName, email: email},
         process.env.JWT_SECRET, {
@@ -69,38 +66,88 @@ exports.signup = [
         // Create a verification URL with the token
         const verificationURL = `${req.protocol}://${req.get('host')}/api/v1/users/verifyEmail/${token}`;
         const verificationURLAng = "http://localhost:4200/verifyEmail?id="+token;
-        // Save the token to the user document
-        const user = await User.create({
-            firstName,
-            lastName,
-            phoneNumber,
-            email,
-            images: req.files ? req.files.map((file) => `/uploads/users/${file.filename}`) : [],
-            password,
-            confirmPassword,
-            passwordChangedAt: req.body.passwordChangedAt,
-            emailVerificationToken: token,
-            emailVerificationExpires: Date.now() + 24 * 60 * 60 * 1000, // Token expires in 24 hours
-        });
 
+        // Upload images to Firebase Cloud Storage
+        const imageUrls = [];
+        if (req.files) {
+            for (const file of req.files) {
+                const extension = path.extname(file.originalname);
+                const filename = `${uuidv4()}${extension}`;
+                const fileRef = bucket.file(`users/${filename}`);
+                const stream = fileRef.createWriteStream({
+                    metadata: {
+                        contentType: file.mimetype
+                    }
+                });
+                stream.on('error', err => {
+                    console.log('Error uploading image: ', err);
+                });
+                stream.on('finish', async () => {
+                    const imageUrl = `https://storage.googleapis.com/${process.env.FIREBASE_STORAGE_BUCKET}/users/${filename}`;
+                    imageUrls.push(imageUrl);
+                    if (imageUrls.length === req.files.length) {
+                        const user = await User.create({
+                            firstName,
+                            lastName,
+                            phoneNumber,
+                            email,
+                            images: imageUrls,
+                            password,
+                            confirmPassword,
+                            passwordChangedAt: req.body.passwordChangedAt,
+                            emailVerificationToken: token,
+                            emailVerificationExpires: Date.now() + 24 * 60 * 60 * 1000, // Token expires in 24 hours
+                        });
 
-        try {
-            // Send verification email
-            await sendEmail({
-                email: user.email,
-                subject: 'Please confirm your email',
-                message: `Please click the following link to confirm your email: ${verificationURLAng}`,
+                        try {
+                            // Send verification email
+                            await sendEmail({
+                                email: user.email,
+                                subject: 'Please confirm your email',
+                                message: `Please click the following link to confirm your email: ${verificationURLAng}`,
+                            });
+
+                            createSendToken(user, 201, res);
+                        } catch (err) {
+                            // If there's an error while sending email, delete the user
+                            await user.remove();
+
+                            return next(new AppError('There was an error sending the email. Please try again later.', 500));
+                        }
+                    }
+                });
+                stream.end(file.buffer);
+            }
+        } else {
+            const user = await User.create({
+                firstName,
+                lastName,
+                phoneNumber,
+                email,
+                images: [],
+                password,
+                confirmPassword,
+                passwordChangedAt: req.body.passwordChangedAt,
+                emailVerificationToken: token,
+                emailVerificationExpires: Date.now() + 24 * 60 * 60 * 1000, // Token expires in 24 hours
             });
 
-            createSendToken(user, 201, res);
-        } catch (err) {
-            // If there's an error while sending email, delete the user
-            await user.remove();
+            try {
+                // Send verification email
+                await sendEmail({
+                    email: user.email,
+                    subject: 'Please confirm your email',
+                    message: `Please click the following link to confirm your email: ${verificationURLAng}`,
+                });
 
-            return next(new AppError('There was an error sending the email. Please try again later.', 500));
-        }
-    },
-];
+                createSendToken(user, 201, res);
+            } catch (err) {
+                // If there's an error while sending email, delete the user
+                await user.remove();
+
+                return next(new AppError('There was an error sending the email. Please try again later.', 500));
+            }}}];
+
 
 exports.verifyEmail = async (req, res, next) => {
     const {token} = req.params;
