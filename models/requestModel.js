@@ -12,6 +12,10 @@ const RequestSchema = new mongoose.Schema(
             enum: ['Item', 'Currency'],
             required: true,
         },
+        requestImage:{
+            type: String,
+            required: false,
+        },
         targetValue: {
             type: Number,
             required: true,
