@@ -1,0 +1,17 @@
+{
+  "type": "service_account",
+  "project_id": "resupply-379921",
+  "private_key_id": "2f0e7acb17e7e98d35470fbaa4ff7f4e3052f369",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC3IDt3DCifsT6O\nJaGk3R479zExsXLZ6xea2Ha/1HMjCcM/jfv4CPE3D186q2RNIX/63mfRZAKxCBn+\nA1Ok1hEmaz5tbedjXBBLqfrFn+VLVNJYeLBSH/Efy/C1b4OtTy7B1Yfa/Y1w9Ake\nNlZPfsr+clvEqV8RftAprPcm7SsE4pU7tFVwnonQMBrsrawlcECt/a0mhBd8YB4+\ndoXPGAqNol3+B5iZ5J1hyMfvoeE7ZIMSsRX/9VSGWFVyhCYn55J7heiAL/w4yS8U\nLfRGcKtA3gg+ewivTKTSTEt+NWlIbFK1eevKHSscHzuYTI2wKLlrSZ+EsGnpU0gp\nu4fpCI/PAgMBAAECggEACIqrAoNsAapuXBhY0PNfahkT1srhAXIKOn3joW06GLr1\nn5sO73kQo7jUuS/Y9BHXges4fHdlwaGBxqS4MS5Vp1fFso+pWnLf/e6e5oHReC2d\nkFZtP3WfvEzWDllZr3IEvTJF5qO5d+NNsK+EmOQ1lYNse30uhnibzQ68UWOc2aHZ\nHo/9n+egW0RLML0zKRqtKCmKMwOdgUZeIVxMC0aUo+u7a0Iq1R4FeXT5ONYx9F2m\nRUqDnTOFMGw9SnXZPhT9mqKSPiJRgbVbmy48bicCmKzZ+6BYlMayUJnyf/v7lwLu\ncp1hWYMt/0cxHWjGaR8WueXRXnDPVgwtb/tRl56xQQKBgQDcpE/DqyfITCWW3cn5\nTzo9rQuSDOD7VcqnKCf7ADy0R0m8Myw0cvUmXznOV54yOfCoPiAL5Qn/yPeLEUB7\nrPy8RFD/jqF+0pA9qCtL5mYH9Wz0VPHo+QNHMz+uyyPVZSUFiJPc8IEekXzNVQRI\nfVaMyjgkQw321CKF7rPDrZNDuwKBgQDUeNqUKYS6kulx2HDiBmf1N8S5DZyqJTel\nVlhv0m71hCzEfd1WcMh256EjKny2iHIlLFcfpGiQCUMOmgXLM9NznRnHA6LEhlOr\nLf8K8FD+4e6Co6oe6TCUK5uTTqCAW2ZoLesC4im/9cQehjHXdrJToLAQOhUf9EqY\na0dbBoHg/QKBgEWD3z2epyIMG6u0pPXPaGIWKxcQx7FoDjksBaynHnkOHMUWuk6s\nCWDVj7jbEhRw/MmFCUO2Hbhg8Nz3yoEst1P5kityHJ+AZ8GFQl7fcDYBtRolyTHF\ngqrkEqRXjCqne0qLBUsO2x9uZwuqRXcxRhuFerqyBaxGmbnowupbvZIRAoGADuP9\nZZ7XR4AeTjU+DAko5f2nktSKYz5CfRrlDckwr5I41PiBN5ql4fdvypgir2Q2o7ZM\n0NHj5hxQD8jpmQkjy5l6AgGWObG0UW3izvByrLpGze8McCglmGzJ9XPwOa6uKaT2\nMHiLNoHR4dXDznbqHoRHcouviVLEm5QBJzb4iT0CgYEAxGzSU9s360VX8jM/Ltg1\nKYskOxQmor56GCmgCi6GKFjZN4OxR6Q5CRWwsrKzh5vJMtsTKC+kWR8p3qdUKKe0\n47XUFY0Td5Ov/xU/HHNXwSrQX3tgSSEIOgcEYFnVerwyEq3tk/hvKkkeIAt/U9OI\nXG3BbajwcrcL6wICQSdy4dc=\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-q6pue@resupply-379921.iam.gserviceaccount.com",
+  "client_id": "114598642637475724326",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-q6pue%40resupply-379921.iam.gserviceaccount.com",
+  "apiKey": "AIzaSyB25cRUy7dF2wyhqa9k1GcWz8PN17pzt2Q",
+  "authDomain": "resupply-379921.firebaseapp.com",
+  "projectId": "resupply-379921",
+  "storageBucket": "resupply-379921.appspot.com",
+  "messagingSenderId": "341761612045"
+}
