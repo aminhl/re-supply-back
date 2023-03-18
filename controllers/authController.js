@@ -11,7 +11,7 @@ const {v4: uuidv4} = require('uuid');
 const multer = require('multer');
 const path = require('path');
 const client = require('twilio')(process.env.ACCOUNT_SID, process.env.AUTH_TOKEN)
-const serviceAccount = require ("../firebase/resupply-379921-firebase-adminsdk-q6pue-381f5928cc.json");
+const serviceAccount = require ("../firebase/resupply-379921-2f0e7acb17e7.json");
 const admin = require ("firebase-admin");
 
 // Initialize Firebase Admin SDK
@@ -83,8 +83,18 @@ exports.signup = [
                     console.log('Error uploading image: ', err);
                 });
                 stream.on('finish', async () => {
-                    const imageUrl = `https://storage.googleapis.com/${process.env.FIREBASE_STORAGE_BUCKET}/users/${filename}`;
-                    imageUrls.push(imageUrl);
+                    const token = uuidv4();
+                    const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${process.env.FIREBASE_STORAGE_BUCKET}/o/users%2F${filename}?alt=media&token=${token}`;
+                    const imageUrlWithToken = await bucket.file(`users/${filename}`).getSignedUrl({
+                        action: 'read',
+                        expires: '03-17-2024',
+                        virtualHostedStyle: true,
+                        query: {
+                            alt: 'media',
+                            token: token
+                        }
+                    });
+                    imageUrls.push(imageUrlWithToken[0]);
                     if (imageUrls.length === req.files.length) {
                         const user = await User.create({
                             firstName,
@@ -146,10 +156,12 @@ exports.signup = [
                 await user.remove();
 
                 return next(new AppError('There was an error sending the email. Please try again later.', 500));
-            }}}];
+            }
+        }
+    }];
 
 
-exports.verifyEmail = async (req, res, next) => {
+        exports.verifyEmail = async (req, res, next) => {
     const {token} = req.params;
     // Find the user with the given token and check if the token is still valid
     const user = await User.findOne({
