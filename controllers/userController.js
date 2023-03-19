@@ -73,7 +73,7 @@ exports.updateUser = [
     async (req, res, next) => {
         try {
             // Find the user to update by ID
-            const user = await User.findById(req.params.id);
+            const user = await User.findById(req.user.id);
 
             if (!user) {
                 return next(new AppError('User not found', 404));
