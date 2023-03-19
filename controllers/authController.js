@@ -68,7 +68,7 @@ exports.signup = [
 
         // Create a verification URL with the token
         const verificationURL = `${req.protocol}://${req.get('host')}/api/v1/users/verifyEmail/${token}`;
-        const verificationURLAng = "http://localhost:4200/verifyEmail?id="+token;
+        const verificationURLAng = "http://localhost:4200/verifyEmail?id=" + token;
         // Save the token to the user document
         const user = await User.create({
             firstName,
@@ -138,6 +138,7 @@ exports.enable2FA = async (req, res) => {
 
 // First part of the logic to handle initial login process and check for Two Factor Authentication
 
+
 exports.login = async (req, res, next) => {
     try {
         const {email, password} = req.body;
@@ -159,38 +160,41 @@ exports.login = async (req, res, next) => {
             return createSendToken(user, 200, res);
         } else if (twoFactorAuth === true) {
             // If two-factor authentication is enabled, send a verification code to the user's phone
-            if (userPhone) {
-                if (!req.query.code) {
-                    const verification = await client.verify.v2
-                        .services(process.env.SERVICE_ID)
-                        .verifications.create({
-                            to: `${userPhone}`,
-                            channel: 'sms',
-                        });
 
-                    if (verification.status === 'pending') {
-                        res.status(200).send({
-                            message: 'Verification is sent!!',
-                        });
-                        return;
-                    }
-                } else {
-                    // 3) Verify the code
-                    const data = await client.verify.v2.services(process.env.SERVICE_ID).verificationChecks.create({
+            if (!req.query.code) {
+                const verification = await client.verify.v2
+                    .services(process.env.SERVICE_ID)
+                    .verifications.create({
                         to: `${userPhone}`,
-                        code: req.query.code,
+                        channel: 'sms',
                     });
 
-                    if (data.status === 'approved') {
-                        // If the code is verified, log in the user
-                        createSendToken(user, 200, res);
-                        return;
-                    } else {
-                        // If the code is not verified, send an error response
-                        return next(new AppError('Wrong verification code', 400));
-                    }
+                if (verification.status === 'pending') {
+                    res.status(200).send({
+                        message: 'Verification is sent!!',
+                        user,
+                    });
+                    return;
+                }
+            } else {
+                // 3) Verify the code
+                const data = await client.verify.v2.services(process.env.SERVICE_ID).verificationChecks.create({
+                    to: `${userPhone}`,
+                    code: req.query.code,
+                    user: user,
+                });
+
+                if (data.status === 'approved') {
+
+                    // If the code is verified, log in the user
+                    createSendToken(user, 200, res);
+                    return;
+                } else {
+                    // If the code is not verified, send an error response
+                    return next(new AppError('Wrong verification code', 400));
                 }
             }
+
             // If the control comes here, it means that the two-factor authentication is enabled
             if (!userPhone || TwoAuthStatus !== true) {
                 return next(new AppError('Two Factor Authentication is not enabled for this user', 400));
@@ -206,8 +210,8 @@ exports.login = async (req, res, next) => {
     } catch (error) {
         next(error);
     }
+}
 
-};
 
 exports.checkEmail = async (req, res, next) => {
     const email = req.body.email;
