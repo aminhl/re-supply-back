@@ -35,5 +35,8 @@
     "twilio": "^4.8.0",
     "uuid": "^9.0.0",
     "validator": "^13.9.0"
+  },
+  "devDependencies": {
+    "prettier": "2.8.4"
   }
 }
