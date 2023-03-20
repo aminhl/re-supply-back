@@ -87,28 +87,16 @@ exports.signup = [
     if (existingUser) {
       return next(new AppError("This email is already taken.", 400));
     }
+
     // Create a random token
     const token = crypto.randomBytes(32).toString("hex");
+
     // Create a verification URL with the token
     const verificationURL = `${req.protocol}://${req.get(
       "host"
     )}/api/v1/users/verifyEmail/${token}`;
     const verificationURLAng = "http://localhost:4200/verifyEmail?id=" + token;
-    // Save the token to the user document
-    const user = await User.create({
-      firstName,
-      lastName,
-      phoneNumber,
-      email,
-      images: req.files
-        ? req.files.map((file) => `/uploads/users/${file.filename}`)
-        : [],
-      password,
-      confirmPassword,
-      passwordChangedAt: req.body.passwordChangedAt,
-      emailVerificationToken: token,
-      emailVerificationExpires: Date.now() + 24 * 60 * 60 * 1000, // Token expires in 24 hours
-    });
+
     // Upload images to Firebase Cloud Storage
     const imageUrls = [];
     if (req.files) {
@@ -152,6 +140,7 @@ exports.signup = [
               emailVerificationToken: token,
               emailVerificationExpires: Date.now() + 24 * 60 * 60 * 1000, // Token expires in 24 hours
             });
+
             try {
               // Send verification email
               await sendEmail({
@@ -159,6 +148,7 @@ exports.signup = [
                 subject: "Please confirm your email",
                 message: `Please click the following link to confirm your email: ${verificationURLAng}`,
               });
+
               createSendToken(user, 201, res);
             } catch (err) {
               // If there's an error while sending email, delete the user
@@ -188,6 +178,7 @@ exports.signup = [
         emailVerificationToken: token,
         emailVerificationExpires: Date.now() + 24 * 60 * 60 * 1000, // Token expires in 24 hours
       });
+
       try {
         // Send verification email
         await sendEmail({
@@ -195,10 +186,12 @@ exports.signup = [
           subject: "Please confirm your email",
           message: `Please click the following link to confirm your email: ${verificationURLAng}`,
         });
+
         createSendToken(user, 201, res);
       } catch (err) {
         // If there's an error while sending email, delete the user
         await user.remove();
+
         return next(
           new AppError(
             "There was an error sending the email. Please try again later.",
@@ -263,7 +256,7 @@ exports.login = async (req, res, next) => {
       "twoFactorAuth phoneNumber"
     );
     const twoFactorAuth = userObj.twoFactorAuth;
-    const userPhone = userObj.phoneNumber;
+    const userPhone = userObj.phoneNumber.internationalNumber;
 
     if (!twoFactorAuth) {
       return createSendToken(user, 200, res);
