@@ -49,6 +49,6 @@ app.all('*', (req, res, next) => {
 });
 
 app.use(globalErrorHandler);
-
-
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 module.exports = app;
