@@ -16,7 +16,7 @@ const client = require('twilio')(process.env.ACCOUNT_SID, process.env.AUTH_TOKEN
 // Set up the storage for uploaded images
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, 'C:\\Users\\ProtocolBlood\\Desktop\\re-supply-front\\src\\assets\\client\\images');
+        cb(null, 'C:\\ReSupply\\Test\\re-supply-front\\src\\assets\\client\\images');
     },
     filename: function (req, file, cb) {
         const ext = path.extname(file.originalname);
@@ -43,6 +43,7 @@ const createSendToken = (user, statusCode, res) => {
     res.cookie('jwt', token, cookieOptions);
     // Remove password from the output
     user.password = undefined;
+
     res.status(201).json({
         status: 'success',
         token,
@@ -65,7 +66,6 @@ exports.signup = [
 
         // Create a random token
         const token = crypto.randomBytes(32).toString('hex');
-
         // Create a verification URL with the token
         const verificationURL = `${req.protocol}://${req.get('host')}/api/v1/users/verifyEmail/${token}`;
         const verificationURLAng = "http://localhost:4200/verifyEmail?id="+token;
@@ -91,11 +91,10 @@ exports.signup = [
                 subject: 'Please confirm your email',
                 message: `Please click the following link to confirm your email: ${verificationURLAng}`,
             });
-
             createSendToken(user, 201, res);
         } catch (err) {
             // If there's an error while sending email, delete the user
-            await user.remove();
+
 
             return next(new AppError('There was an error sending the email. Please try again later.', 500));
         }
