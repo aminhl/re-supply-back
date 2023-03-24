@@ -1,20 +1,22 @@
-const {promisify} = require('util')
-const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
-const User = require('./../models/userModel');
-const AppError = require('./../utils/appError');
-const sendEmail = require('./../utils/email');
-const passport = require('passport');
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const FacebookStrategy = require('passport-facebook').Strategy;
-const {v4: uuidv4} = require('uuid');
-const multer = require('multer');
-const path = require('path');
-const client = require('twilio')(process.env.ACCOUNT_SID, process.env.AUTH_TOKEN)
-const serviceAccount = require ("../firebase/resupply-379921-2f0e7acb17e7.json");
+const { promisify } = require("util");
+const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
+const User = require("./../models/userModel");
+const AppError = require("./../utils/appError");
+const sendEmail = require("./../utils/email");
+const passport = require("passport");
+const GoogleStrategy = require("passport-google-oauth20").Strategy;
+const FacebookStrategy = require("passport-facebook").Strategy;
+const { v4: uuidv4 } = require("uuid");
+const multer = require("multer");
+const path = require("path");
+const client = require("twilio")(
+  process.env.ACCOUNT_SID,
+  process.env.AUTH_TOKEN
+);
+const serviceAccount = require("../firebase/resupply-379921-2f0e7acb17e7.json");
 
-const admin = require ("firebase-admin");
-
+const admin = require("firebase-admin");
 
 // Initialize Firebase Admin SDK
 admin.initializeApp({
@@ -42,38 +44,55 @@ const signToken = (id, role, firstName, lastName, email) => {
 };
 
 const createSendToken = (user, statusCode, res) => {
+  const token = signToken(
+    user._id,
+    user.role,
+    user.firstName,
+    user.lastName,
+    user.email
+  );
+  const cookieOptions = {
+    expires: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+    ),
+    httpOnly: true,
+  };
+  if (process.env.NODE_ENV === "production") cookieOptions.secure = true;
+  res.cookie("jwt", token, cookieOptions);
+  // Remove password from the output
+  user.password = undefined;
 
-    const token = signToken(user._id, user.role, user.firstName, user.lastName, user.email);
-    const cookieOptions = {
-        expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000),
-        httpOnly: true
-    }
-    if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
-    res.cookie('jwt', token, cookieOptions);
-    // Remove password from the output
-    user.password = undefined;
-
-    res.status(201).json({
-        status: 'success',
-        token,
-        data: {
-            user,
-        },
-    });
-}
+  res.status(201).json({
+    status: "success",
+    token,
+    data: {
+      user,
+    },
+  });
+};
 exports.signup = [
   // Use multer middleware to handle the form data
-  upload.array('images', 2), async (req, res, next) => {
-    const {firstName, lastName, phoneNumber, email, password, confirmPassword} = req.body;
+  upload.array("images", 2),
+  async (req, res, next) => {
+    const {
+      firstName,
+      lastName,
+      phoneNumber,
+      email,
+      password,
+      confirmPassword,
+    } = req.body;
     // Check if email already exists
-    const existingUser = await User.findOne({email});
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return next(new AppError('This email is already taken.', 400));
+      return next(new AppError("This email is already taken.", 400));
     }
     // Create a random token
-    const token = crypto.randomBytes(32).toString('hex');
-    const verificationURL = `${req.protocol}://${req.get('host')}/api/v1/users/verifyEmail/${token}`;
-    const verificationURLAng = "http://localhost:4200/verifyEmail?id="+token;
+    const token = crypto.randomBytes(32).toString("hex");
+    const verificationURL = `${req.protocol}://${req.get(
+      "host"
+    )}/api/v1/users/verifyEmail/${token}`;
+    const verificationURLAng = "http://localhost:4200/verifyEmail?id=" + token;
     // Upload images to Firebase Cloud Storage
     const imageUrls = [];
     if (req.files) {
@@ -83,24 +102,26 @@ exports.signup = [
         const fileRef = bucket.file(`users/${filename}`);
         const stream = fileRef.createWriteStream({
           metadata: {
-            contentType: file.mimetype
-          }
+            contentType: file.mimetype,
+          },
         });
-        stream.on('error', err => {
-          console.log('Error uploading image: ', err);
+        stream.on("error", (err) => {
+          console.log("Error uploading image: ", err);
         });
-        stream.on('finish', async () => {
+        stream.on("finish", async () => {
           const FireBaseToken = uuidv4();
           const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${process.env.FIREBASE_STORAGE_BUCKET}/o/users%2F${filename}?alt=media&token=${FireBaseToken}`;
-          const imageUrlWithToken = await bucket.file(`users/${filename}`).getSignedUrl({
-            action: 'read',
-            expires: '03-17-2024',
-            virtualHostedStyle: true,
-            query: {
-              alt: 'media',
-              token: FireBaseToken
-            }
-          });
+          const imageUrlWithToken = await bucket
+            .file(`users/${filename}`)
+            .getSignedUrl({
+              action: "read",
+              expires: "03-17-2024",
+              virtualHostedStyle: true,
+              query: {
+                alt: "media",
+                token: FireBaseToken,
+              },
+            });
           imageUrls.push(imageUrlWithToken[0]);
           if (imageUrls.length === req.files.length) {
             const user = await User.create({
@@ -120,14 +141,19 @@ exports.signup = [
               // Send verification email
               await sendEmail({
                 email: user.email,
-                subject: 'Please confirm your email',
+                subject: "Please confirm your email",
                 message: `Please click the following link to confirm your email: ${verificationURLAng}`,
               });
               createSendToken(user, 201, res);
             } catch (err) {
               // If there's an error while sending email, delete the user
               await user.remove();
-              return next(new AppError('There was an error sending the email. Please try again later.', 500));
+              return next(
+                new AppError(
+                  "There was an error sending the email. Please try again later.",
+                  500
+                )
+              );
             }
           }
         });
@@ -151,26 +177,30 @@ exports.signup = [
         // Send verification email
         await sendEmail({
           email: user.email,
-          subject: 'Please confirm your email',
+          subject: "Please confirm your email",
           message: `Please click the following link to confirm your email: ${verificationURLAng}`,
         });
 
         createSendToken(user, 201, res);
-
       } catch (err) {
         // If there's an error while sending email, delete the user
         await user.remove();
 
-        return next(new AppError('There was an error sending the email. Please try again later.', 500));
-
+        return next(
+          new AppError(
+            "There was an error sending the email. Please try again later.",
+            500
+          )
+        );
       }
     }
-  }];
+  },
+];
 
 exports.verifyEmail = async (req, res, next) => {
   const { token } = req.params;
-  console.log(req)
-  console.log(req.params)
+  console.log(req);
+  console.log(req.params);
   // Find the user with the given token and check if the token is still valid
   const user = await User.findOne({
     emailVerificationToken: token,
@@ -234,7 +264,7 @@ exports.login = async (req, res, next) => {
         const verification = await client.verify.v2
           .services(process.env.SERVICE_ID)
           .verifications.create({
-            to: `+216${userPhone}`,
+            to: `${userPhone}`,
             channel: "sms",
           });
 
@@ -250,7 +280,7 @@ exports.login = async (req, res, next) => {
         const data = await client.verify.v2
           .services(process.env.SERVICE_ID)
           .verificationChecks.create({
-            to: `+216${userPhone}`,
+            to: `${userPhone}`,
             code: req.query.code,
             user: user,
           });
