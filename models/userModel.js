@@ -2,7 +2,6 @@ const mongoose = require("mongoose");
 const validator = require("validator").default;
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
-const { phoneSchema } = require("./phoneModel");
 
 const userSchema = new mongoose.Schema({
   firstName: {
