@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const requestController = require('../controllers/requestController');
+const authController = require("../controllers/authController");
 
 
 router.get('/', requestController.getAllRequests);
@@ -9,7 +10,7 @@ router.get('/', requestController.getAllRequests);
 router.get('/:id', requestController.getRequestById);
 
 
-router.post('/', requestController.createRequest);
+router.post('/', authController.protect, requestController.addRequest);
 
 
 router.put('/:id', requestController.updateRequest);
