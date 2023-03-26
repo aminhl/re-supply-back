@@ -20,6 +20,7 @@ const RequestSchema = new mongoose.Schema(
             type: Number,
             default: 0,
         },
+        requestImage:[String],
         postedAt: {
             type: Date,
             required: true,
