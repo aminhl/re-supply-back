@@ -6,7 +6,11 @@ const path = require("path");
 const {v4: uuidv4} = require("uuid");
 const sendEmail = require("../utils/email");
 const multer = require("multer");
+const admin = require("firebase-admin");
+const serviceAccount = require("../firebase/resupply-379921-2f0e7acb17e7.json");
 const upload = multer();
+const bucket = admin.storage().bucket();
+
 
 
 
@@ -93,7 +97,6 @@ exports.addRequest = [
         }
     },
 ];
-
 
 
 // exports.createRequest = async (req, res) => {

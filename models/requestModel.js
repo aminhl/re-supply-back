@@ -5,12 +5,12 @@ const RequestSchema = new mongoose.Schema(
         requester_id: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
-            required: true,
+            required: false,
         },
         type: {
             type: String,
             enum: ['Item', 'Currency'],
-            required: true,
+            required: false,
         },
         targetValue: {
             type: Number,
