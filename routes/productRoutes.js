@@ -3,7 +3,7 @@ const productController = require('../controllers/productController');
 const router = express.Router();
 const authController = require('../controllers/authController');
 
-router.route("/").post(authController.protect, authController.restrictTo("admin","member") ,productController.addProduct).get(authController.protect, authController.restrictTo("admin") ,productController.getAllProducts);
+router.route("/").post(authController.protect, authController.restrictTo("admin","member") ,productController.addProduct).get(authController.protect, authController.restrictTo("admin","member") ,productController.getAllProducts);
 router.route("/:id").delete(authController.protect, authController.restrictTo("admin","member") ,productController.deleteProduct).patch(authController.protect, authController.restrictTo("admin","member") ,productController.updateProduct);
 router.route("/accept/:id").patch(authController.protect, authController.restrictTo("admin") ,productController.acceptProduct);
 router.route("/reject/:id").patch(authController.protect, authController.restrictTo("admin") ,productController.rejectProduct);

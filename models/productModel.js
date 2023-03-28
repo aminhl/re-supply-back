@@ -24,7 +24,7 @@ const productSchema = new mongoose.Schema({
         type: Date,
         default: Date.now()
     },
-    user: {
+    owner: {
         type: mongoose.Schema.ObjectId,
         ref: 'User',
     }

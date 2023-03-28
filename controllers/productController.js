@@ -3,49 +3,104 @@ const AppError = require('./../utils/appError');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs/promises');
+const serviceAccount = require("../firebase/resupply-379921-2f0e7acb17e7.json");
+const { v4: uuidv4 } = require("uuid");
 
-// Set up the storage for uploaded images
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'public/uploads/');
-    },
-    filename: function (req, file, cb) {
-        const ext = path.extname(file.originalname);
-        cb(null, Date.now() + ext);
-    }
-});
+const admin = require("firebase-admin");
+
+// Initialize the Firebase Admin SDK only once
+if (!admin.apps.length) {
+    admin.initializeApp();
+}
+const bucket = admin.storage().bucket();
 
 // Create the multer upload object
-const upload = multer({ storage: storage });
+const upload = multer();
 
 // Controller to create a new product
 exports.addProduct = [
     // Use multer middleware to handle the form data
-    upload.array('images', 5),
+    upload.array("images", 5),
 
     async (req, res, next) => {
         try {
-            // Create a new product with the data from the request body
-            const product = new Product({
-                name: req.body.name,
-                description: req.body.description,
-                price: req.body.price,
-                images: req.files ? req.files.map((file) => `/uploads/${file.filename}`) : []
-            });
+            // Upload images to Firebase Cloud Storage
+            const imageUrls = [];
+            if (req.files) {
+                for (const file of req.files) {
+                    const extension = path.extname(file.originalname);
+                    const filename = `${uuidv4()}${extension}`;
+                    const fileRef = bucket.file(`products/${filename}`);
+                    const stream = fileRef.createWriteStream({
+                        metadata: {
+                            contentType: file.mimetype,
+                        },
+                    });
+                    stream.on("error", (err) => {
+                        console.log("Error uploading image: ", err);
+                    });
+                    stream.on("finish", async () => {
+                        const FireBaseToken = uuidv4();
+                        const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${process.env.FIREBASE_STORAGE_BUCKET}/o/products%2F${filename}?alt=media&token=${FireBaseToken}`;
+                        const imageUrlWithToken = await bucket
+                            .file(`products/${filename}`)
+                            .getSignedUrl({
+                                action: "read",
+                                expires: "03-17-2024",
+                                virtualHostedStyle: true,
+                                query: {
+                                    alt: "media",
+                                    token: FireBaseToken,
+                                },
+                            });
+                        imageUrls.push(imageUrlWithToken[0]);
+                        if (imageUrls.length === req.files.length) {
+                            // Create a new product with the data from the request body
+                            const product = new Product({
+                                name: req.body.name,
+                                description: req.body.description,
+                                price: req.body.price,
+                                owner: req.user.id,
+                                images: imageUrls,
+                            });
 
-            // Save the product to the database
-            await product.save();
+                            // Save the product to the database
+                            await product.save();
 
-            res.status(201).json({
-                status: 'success',
-                data: {
-                    product
+                            res.status(201).json({
+                                status: "success",
+                                data: {
+                                    product,
+                                },
+                            });
+                        }
+                    });
+                    stream.end(file.buffer);
                 }
-            });
+            } else {
+                // Create a new product with the data from the request body
+                const product = new Product({
+                    name: req.body.name,
+                    description: req.body.description,
+                    price: req.body.price,
+                    owner: req.user.id,
+                    images: [],
+                });
+
+                // Save the product to the database
+                await product.save();
+
+                res.status(201).json({
+                    status: "success",
+                    data: {
+                        product,
+                    },
+                });
+            }
         } catch (err) {
             return next(err);
         }
-    }
+    },
 ];
 
 exports.getAllProducts = async (req, res, next) => {
