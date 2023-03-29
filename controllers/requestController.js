@@ -58,10 +58,9 @@ exports.addRequest = [
                             });
                         imageUrls.push(imageUrlWithToken[0]);
                         if (imageUrls.length === req.files.length) {
-
                             // Create the request
                             const newRequest = new Request({
-                                requester_id: user.id,
+                                requester_id: req.user.id,
                                 type: req.body.type,
                                 targetValue: req.body.targetValue,
                                 currentValue: req.body.currentValue,
@@ -70,22 +69,14 @@ exports.addRequest = [
                             });
 
                             // Save the request to the database
-                            await request.save();
+                            await newRequest.save();
 
                             // Populate the response with the requester details and images
-                            const populatedRequest = await Request.findById(request._id)
-                                .populate("requester_id", "firstName lastName email images")
-                                .populate({
-                                    path: "requester_id",
-                                    populate: {
-                                        path: "images",
-                                    },
-                                });
 
                             res.status(201).json({
                                 status: "success",
                                 data: {
-                                    request: populatedRequest,
+                                    request: newRequest,
                                 },
                             });
                         }
@@ -95,7 +86,7 @@ exports.addRequest = [
             } else {
                 // Create a new request with the data from the request body
                 const request = new Request({
-                    requester_id: req.body.requester_id,
+                    requester_id: req.user.id,
                     type: req.body.type,
                     targetValue: req.body.targetValue,
                     currentValue: req.body.currentValue,
