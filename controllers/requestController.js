@@ -10,14 +10,6 @@ const admin = require("firebase-admin");
 const serviceAccount = require("../firebase/resupply-379921-2f0e7acb17e7.json");
 
 
-if (!admin.apps.length) {
-    admin.initializeApp();
-}
-const bucket = admin.storage().bucket();
-const upload = multer();
-
-
-
 
 
 // Initialize the Firebase Admin SDK only once
