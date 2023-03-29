@@ -19,13 +19,22 @@ const upload = multer();
 
 
 
+
+// Initialize the Firebase Admin SDK only once
+if (!admin.apps.length) {
+    admin.initializeApp();
+}
+const bucket = admin.storage().bucket();
+
+// Create the multer upload object
+const upload = multer();
+
 exports.addRequest = [
     // Use multer middleware to handle the form data
-    upload.array('requestImages', 2),
+    upload.array("requestImage", 5),
+
     async (req, res, next) => {
         try {
-            // Get the user who is making the request
-            const user = await User.findById(req.user.id);
             // Upload images to Firebase Cloud Storage
             const imageUrls = [];
             if (req.files) {
@@ -38,25 +47,26 @@ exports.addRequest = [
                             contentType: file.mimetype,
                         },
                     });
-                    stream.on('error', (err) => {
-                        console.log('Error uploading image: ', err);
+                    stream.on("error", (err) => {
+                        console.log("Error uploading image: ", err);
                     });
-                    stream.on('finish', async () => {
+                    stream.on("finish", async () => {
                         const FireBaseToken = uuidv4();
                         const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${process.env.FIREBASE_STORAGE_BUCKET}/o/requests%2F${filename}?alt=media&token=${FireBaseToken}`;
                         const imageUrlWithToken = await bucket
                             .file(`requests/${filename}`)
                             .getSignedUrl({
-                                action: 'read',
-                                expires: '03-17-2024',
+                                action: "read",
+                                expires: "03-17-2024",
                                 virtualHostedStyle: true,
                                 query: {
-                                    alt: 'media',
+                                    alt: "media",
                                     token: FireBaseToken,
                                 },
                             });
                         imageUrls.push(imageUrlWithToken[0]);
                         if (imageUrls.length === req.files.length) {
+
                             // Create the request
                             const newRequest = new Request({
                                 requester_id: user.id,
@@ -64,14 +74,26 @@ exports.addRequest = [
                                 targetValue: req.body.targetValue,
                                 currentValue: req.body.currentValue,
                                 requestImage: imageUrls,
-                                postedAt: new Date(),
                                 notes: req.body.notes,
                             });
-                            await newRequest.save();
+
+                            // Save the request to the database
+                            await request.save();
+
+                            // Populate the response with the requester details and images
+                            const populatedRequest = await Request.findById(request._id)
+                                .populate("requester_id", "firstName lastName email images")
+                                .populate({
+                                    path: "requester_id",
+                                    populate: {
+                                        path: "images",
+                                    },
+                                });
+
                             res.status(201).json({
-                                status: 'success',
+                                status: "success",
                                 data: {
-                                    request: newRequest,
+                                    request: populatedRequest,
                                 },
                             });
                         }
@@ -79,26 +101,38 @@ exports.addRequest = [
                     stream.end(file.buffer);
                 }
             } else {
-                // Create the request without images
-                const newRequest = new Request({
-                    requester_id: user._id,
+                // Create a new request with the data from the request body
+                const request = new Request({
+                    requester_id: req.body.requester_id,
                     type: req.body.type,
                     targetValue: req.body.targetValue,
                     currentValue: req.body.currentValue,
-                    postedAt: new Date(),
+                    requestImage: [],
                     notes: req.body.notes,
                 });
-                await newRequest.save();
+
+                // Save the request to the database
+                await request.save();
+
+                // Populate the response with the requester details and images
+                const populatedRequest = await Request.findById(request._id)
+                    .populate("requester_id", "firstName lastName email images")
+                    .populate({
+                        path: "requester_id",
+                        populate: {
+                            path: "images",
+                        },
+                    });
+
                 res.status(201).json({
-                    status: 'success',
+                    status: "success",
                     data: {
-                        request: newRequest,
+                        request: populatedRequest,
                     },
                 });
             }
         } catch (err) {
-            console.log(err);
-            return next(new AppError('Unable to add request', 500));
+            return next(err);
         }
     },
 ];
