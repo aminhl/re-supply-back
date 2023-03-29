@@ -11,4 +11,5 @@ router.route("/accepted").get(authController.protect, authController.restrictTo(
 router.route("/pending").get(authController.protect, authController.restrictTo("admin") ,productController.getPendingProducts);
 router.route("/get/:id").get(authController.protect, authController.restrictTo("admin","member") ,productController.getProduct);
 router.route("/search").get(authController.protect, authController.restrictTo("admin","member") ,productController.searchProducts);
+router.route("/ownerDetails/:id").get(authController.protect, authController.restrictTo("admin","member") ,productController.getOwnerDetails);
 module.exports = router;

@@ -7,6 +7,7 @@ const serviceAccount = require("../firebase/resupply-379921-2f0e7acb17e7.json");
 const { v4: uuidv4 } = require("uuid");
 
 const admin = require("firebase-admin");
+const User = require("../models/userModel");
 
 // Initialize the Firebase Admin SDK only once
 if (!admin.apps.length) {
@@ -67,10 +68,20 @@ exports.addProduct = [
                             // Save the product to the database
                             await product.save();
 
+                            // Populate the response with the owner details and images
+                            const populatedProduct = await Product.findById(product._id)
+                                .populate("owner", "firstName lastName email images")
+                                .populate({
+                                    path: "owner",
+                                    populate: {
+                                        path: "images",
+                                    },
+                                });
+
                             res.status(201).json({
                                 status: "success",
                                 data: {
-                                    product,
+                                    product: populatedProduct,
                                 },
                             });
                         }
@@ -90,10 +101,20 @@ exports.addProduct = [
                 // Save the product to the database
                 await product.save();
 
+                // Populate the response with the owner details and images
+                const populatedProduct = await Product.findById(product._id)
+                    .populate("owner", "firstName lastName email images")
+                    .populate({
+                        path: "owner",
+                        populate: {
+                            path: "images",
+                        },
+                    });
+
                 res.status(201).json({
                     status: "success",
                     data: {
-                        product,
+                        product: populatedProduct,
                     },
                 });
             }
@@ -103,19 +124,23 @@ exports.addProduct = [
     },
 ];
 
+
+
 exports.getAllProducts = async (req, res, next) => {
-  const products = await Product.find();
-  try {
-    res.status(200).json({
-      status: 'success',
-      data: {
-        products: products,
-      },
-    });
-  } catch (err) {
-    return next(new AppError(err, 500));
-  }
+    try {
+        const products = await Product.find().populate('owner', 'firstName lastName email images');
+
+        res.status(200).json({
+            status: 'success',
+            data: {
+                products: products,
+            },
+        });
+    } catch (err) {
+        return next(new AppError(err, 500));
+    }
 };
+
 
 exports.getProduct = async (req, res, next) => {
   try {
@@ -267,3 +292,19 @@ exports.searchProducts = async (req, res, next) => {
         return next(err);
     }
 };
+
+exports.getOwnerDetails = async (req, res, next) => {
+    try {
+        const product = await Product.findById(req.params.id);
+        if (!product) return next(new AppError(`Product not found`, 404));
+        const owner = await User.findById(product.owner);
+        res.status(200).json({
+            status: 'success',
+            data: {
+                owner: owner,
+            },
+        });
+    } catch (err) {
+        return next(new AppError(err, 500));
+    }
+}
