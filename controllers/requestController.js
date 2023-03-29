@@ -8,8 +8,13 @@ const sendEmail = require("../utils/email");
 const multer = require("multer");
 const admin = require("firebase-admin");
 const serviceAccount = require("../firebase/resupply-379921-2f0e7acb17e7.json");
-const upload = multer();
+
+
+if (!admin.apps.length) {
+    admin.initializeApp();
+}
 const bucket = admin.storage().bucket();
+const upload = multer();
 
 
 
@@ -54,7 +59,7 @@ exports.addRequest = [
                         if (imageUrls.length === req.files.length) {
                             // Create the request
                             const newRequest = new Request({
-                                requester_id: user._id,
+                                requester_id: user.id,
                                 type: req.body.type,
                                 targetValue: req.body.targetValue,
                                 currentValue: req.body.currentValue,
@@ -99,21 +104,6 @@ exports.addRequest = [
 ];
 
 
-// exports.createRequest = async (req, res) => {
-//     try {
-//         const newRequest = new Request({
-//             requester_id: req.body.requester_id,
-//             type: req.body.type,
-//             targetValue: req.body.targetValue,
-//             notes: req.body.notes,
-//         });
-//
-//         const savedRequest = await newRequest.save();
-//         res.status(201).json(savedRequest);
-//     } catch (err) {
-//         res.status(500).json(err);
-//     }
-// };
 
 exports.getAllRequests = async (req, res) => {
     try {
