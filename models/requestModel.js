@@ -10,11 +10,11 @@ const RequestSchema = new mongoose.Schema(
         type: {
             type: String,
             enum: ['Item', 'Currency'],
-            required: false,
+            required: true,
         },
         targetValue: {
             type: Number,
-            required: true,
+            required: false,
         },
         currentValue: {
             type: Number,
