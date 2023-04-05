@@ -1,79 +1,132 @@
-const Article = require('../models/ArticleModel');
-const AppError = require('./../utils/appError');
-const User = require('../models/userModel');
+const Article = require("../models/ArticleModel");
+const AppError = require("./../utils/appError");
+const User = require("../models/userModel");
+const multer = require("multer");
 
-exports.addArticle = async (req, res, next) => {
-    try {
-        const article = await Article.create({
-            title: req.body.title,
-            description: req.body.description,
-            image: req.body.image,
-        });
-
-        const populatedArticle = await article.populate('user')
-        res.status(201).json({
-            status: 'success',
-            data: {
-                article: populatedArticle,
-            },
-        });
-    } catch (err) {
-        return next(new AppError(err, 500));
-    }
+const FILE_TYPE_MAP = {
+  "image/png": "png",
+  "image/jpeg": "jpeg",
+  "image/jpg": "jpg",
 };
-exports.getAllArticles = async (req, res, next) => {
-    const articles = await Article.find();
-    try {
-        res.status(200).json({
-            status: 'success',
-            data: {
-                articles: articles,
-            },
-        });
-    } catch (err) {
-        return next(new AppError(err, 500));
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const isValid = FILE_TYPE_MAP[file.mimetype];
+    let uploadError = new Error("invalid image type");
+
+    if (isValid) {
+      uploadError = null;
     }
+    cb(uploadError, "public/uploads/articles");
+  },
+  filename: function (req, file, cb) {
+    const fileName = file.originalname.split(" ").join("-");
+    const extension = FILE_TYPE_MAP[file.mimetype];
+    cb(null, `${fileName}-${Date.now()}.${extension}`);
+  },
+});
+const uploadOptions = multer({ storage: storage });
+
+exports.addArticle = [
+  uploadOptions.array("images"),
+  async (req, res) => {
+    const files = req.files;
+    const basePath = `${req.protocol}://${req.get("host")}/uploads/articles/`;
+
+    let imagesPaths = [];
+    if (files) {
+      files.map((file) => {
+        imagesPaths.push(`${basePath}${file.filename}`);
+      });
+    }
+
+    let article = new Article({
+      title: req.body.title,
+      description: req.body.description,
+      images: imagesPaths,
+    });
+    article = await article.save();
+
+    if (!article) return res.status(500).send("The article cannot be created");
+
+    res.send(article);
+  },
+];
+
+exports.getAllArticles = async (req, res, next) => {
+  const articles = await Article.find();
+  try {
+    res.status(200).json({
+      status: "success",
+      data: {
+        articles: articles,
+      },
+    });
+  } catch (err) {
+    return next(new AppError(err, 500));
+  }
 };
 exports.getArticleById = async (req, res, next) => {
-    try {
-        const article = await Article.findById(req.params.id);
-        if (!article) return next(new AppError(`article not found`, 404));
-        res.status(200).json({
-            status: 'success',
-            data: {
-                article: article,
-            },
-        });
-    } catch (err) {
-        return next(new AppError(err, 500));
-    }
+  try {
+    const article = await Article.findById(req.params.id);
+    if (!article) return next(new AppError(`article not found`, 404));
+    res.status(200).json({
+      status: "success",
+      data: {
+        article: article,
+      },
+    });
+  } catch (err) {
+    return next(new AppError(err, 500));
+  }
 };
 exports.deleteArticle = async (req, res, next) => {
-    try {
-        const article = await Article.findByIdAndDelete(req.params.id);
-        if (!article) return next(new AppError(`article not found`, 404));
-        res.status(204).json({
-            status: 'success',
-            message: 'article deleted',
-        });
-    } catch (err) {
-        return next(new AppError(err, 500));
-    }
+  try {
+    const article = await Article.findByIdAndDelete(req.params.id);
+    if (!article) return next(new AppError(`article not found`, 404));
+    res.status(204).json({
+      status: "success",
+      message: "article deleted",
+    });
+  } catch (err) {
+    return next(new AppError(err, 500));
+  }
 };
-exports.updateArticle = async (req, res, next) => {
-    try {
-        const article = await Article.findByIdAndUpdate(req.params.id, req.body, {
-            new: true,
-            runValidators: true,
-        });
-        if (!article) return next(new AppError(`Resource not found`, 404));
-        res.status(200).json({
-            status: 'success',
-            data: {
-                article: article,
-            },
-        });
-    } catch (err) {
-        return next(new AppError(err, 500));
+exports.updateArticle = [
+  uploadOptions.array("images"),
+  async (req, res, next) => {
+    const files = req.files;
+    const basePath = `${req.protocol}://${req.get("host")}/uploads/articles/`;
+
+    let imagesPaths = [];
+    if (files) {
+      files.map((file) => {
+        imagesPaths.push(`${basePath}${file.filename}`);
+      });
     }
-};
+    try {
+      const article = await Article.findByIdAndUpdate(
+        req.params.id,
+
+        {
+          title: req.body.title,
+          description: req.body.description,
+          images: imagesPaths,
+        },
+        {
+          new: true,
+          runValidators: true,
+        }
+      );
+      if (!article) return next(new AppError(`Resource not found`, 404));
+      res.status(200).json({
+        status: "success",
+        data: {
+          article: article,
+        },
+      });
+    } catch (err) {
+      return next(new AppError(err, 500));
+    }
+  },
+];
