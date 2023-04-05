@@ -23,7 +23,7 @@ const articleSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-articleSchema.virtual("comments", {
+articleSchema.virtual("commentsVirtual", {
   ref: "Comment",
   localField: "_id",
   foreignField: "belongTo",
@@ -31,4 +31,4 @@ articleSchema.virtual("comments", {
 
 const Article = mongoose.model("Article", articleSchema);
 
-module.exports = Article;
+module.exports = { Article };
