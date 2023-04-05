@@ -1,18 +1,33 @@
 const Comment = require("../models/commentModel");
 const AppError = require("../utils/appError");
+const { Article } = require("../models/articleModel");
 
 exports.addComment = async (req, res, next) => {
-  let comment = await Comment.create({
-    content: req.body.content,
-  });
-  console.log(content);
   try {
-    comment = await comment.save();
-    console.log(comment);
+    // Get the article _id from the request URL parameter
+    const articleId = req.params.articleId;
+
+    // Create a new comment and set its belongTo field to the article _id
+    const comment = new Comment({
+      content: req.body.content,
+      belongTo: articleId,
+    });
+
+    // Save the comment to the database
+    const savedComment = await comment.save();
+
+    // Find the article and update its comments field with the new comment
+    const article = await Article.findByIdAndUpdate(
+      articleId,
+      { $push: { comments: savedComment._id } },
+      { new: true }
+    );
+
     res.status(201).json({
       status: "success",
       data: {
-        comment,
+        comment: savedComment,
+        article,
       },
     });
   } catch (err) {

@@ -1,7 +1,6 @@
-const Article = require("../models/ArticleModel");
 const AppError = require("./../utils/appError");
-const User = require("../models/userModel");
 const multer = require("multer");
+const { Article } = require("../models/articleModel");
 
 const FILE_TYPE_MAP = {
   "image/png": "png",
@@ -25,6 +24,7 @@ const storage = multer.diskStorage({
     cb(null, `${fileName}-${Date.now()}.${extension}`);
   },
 });
+
 const uploadOptions = multer({ storage: storage });
 
 exports.addArticle = [
@@ -66,9 +66,12 @@ exports.getAllArticles = async (req, res, next) => {
     return next(new AppError(err, 500));
   }
 };
+
 exports.getArticleById = async (req, res, next) => {
   try {
-    const article = await Article.findById(req.params.id);
+    const article = await Article.findById(req.params.id).populate(
+      "commentsVirtual"
+    );
     if (!article) return next(new AppError(`article not found`, 404));
     res.status(200).json({
       status: "success",
@@ -80,6 +83,7 @@ exports.getArticleById = async (req, res, next) => {
     return next(new AppError(err, 500));
   }
 };
+
 exports.deleteArticle = async (req, res, next) => {
   try {
     const article = await Article.findByIdAndDelete(req.params.id);
@@ -92,6 +96,7 @@ exports.deleteArticle = async (req, res, next) => {
     return next(new AppError(err, 500));
   }
 };
+
 exports.updateArticle = [
   uploadOptions.array("images"),
   async (req, res, next) => {
