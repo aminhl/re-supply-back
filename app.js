@@ -47,12 +47,7 @@ app.use("/api/v1/articles", articleRouter);
 app.use("/api/v1/exchanges", exchangeRouter);
 
 app.all("*", (req, res, next) => {
-  const fileExtensionRegex = /\.(jpeg|jpg|svg|webp|png)$/i;
-  if (
-    req.originalUrl.startsWith("/uploads/articles") ||
-    req.originalUrl.match(req.fileExtensionRegex)
-  )
-    return next();
+  if (req.originalUrl.startsWith("/uploads/articles")) return next();
 
   next(new AppError(`can't find ${req.originalUrl} on this server`, 404));
 });
