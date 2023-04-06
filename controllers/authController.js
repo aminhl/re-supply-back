@@ -606,3 +606,88 @@ exports.facebookLogin = passport.authenticate("facebook", { scope: ["email"] });
     // create and send a token to the client
     createSendToken(req.user, 200, res);
   };
+
+
+exports.updateUser = [
+  // Use multer middleware to handle the form data
+  upload.array('images', 2),
+  async (req, res, next) => {
+    try {
+      // Find the user to update by ID
+      const user = await User.findById(req.user.id);
+
+      if (!user) {
+        return next(new AppError('User not found', 404));
+      }
+
+      // Update the user with the new data
+      if (req.body.firstName) user.firstName = req.body.firstName;
+      if (req.body.lastName) user.lastName = req.body.lastName;
+      if (req.body.phoneNumber) user.phoneNumber = req.body.phoneNumber;
+
+      // Upload images to Firebase Cloud Storage
+      if (req.files && req.files.length > 0) {
+        // Upload new images to Firebase Cloud Storage
+        const imageUrls = [];
+        for (const file of req.files) {
+          const extension = path.extname(file.originalname);
+          const filename = `${uuidv4()}${extension}`;
+          const fileRef = bucket.file(`users/${filename}`);
+          const stream = fileRef.createWriteStream({
+            metadata: {
+              contentType: file.mimetype,
+            },
+          });
+          stream.on('error', (err) => {
+            console.log('Error uploading image: ', err);
+          });
+          stream.on('finish', async () => {
+            const FireBaseToken = uuidv4();
+            const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${process.env.FIREBASE_STORAGE_BUCKET}/o/users%2F${filename}?alt=media&token=${FireBaseToken}`;
+            const imageUrlWithToken = await bucket
+                .file(`users/${filename}`)
+                .getSignedUrl({
+                  action: 'read',
+                  expires: '03-17-2024',
+                  virtualHostedStyle: true,
+                  query: {
+                    alt: 'media',
+                    token: FireBaseToken,
+                  },
+                });
+            imageUrls.push(imageUrlWithToken[0]);
+            if (imageUrls.length === req.files.length) {
+              user.images = [...user.images.slice(1), ...imageUrls];
+              // Save the updated user to the database
+              await user.save();
+              res.status(200).json({
+                status: 'success',
+                data: {
+                  user,
+                },
+              });
+            }
+          });
+          stream.end(file.buffer);
+        }
+      } else {
+        // Save the updated user to the database if there's no new image
+        await user.save();
+        res.status(200).json({
+          status: 'success',
+          data: {
+            user,
+          },
+        });
+      }
+    } catch (err) {
+      return next(err);
+    }
+  },
+];
+
+
+
+
+
+
