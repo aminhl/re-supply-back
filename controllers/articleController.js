@@ -1,7 +1,7 @@
 const AppError = require("./../utils/appError");
 const multer = require("multer");
 const { Article } = require("../models/articleModel");
-
+const Comment = require("../models/commentModel");
 const FILE_TYPE_MAP = {
   "image/png": "png",
   "image/jpeg": "jpeg",
@@ -72,11 +72,14 @@ exports.getArticleById = async (req, res, next) => {
     const article = await Article.findById(req.params.id).populate(
       "commentsVirtual"
     );
+    const comments = article.commentsVirtual;
+
     if (!article) return next(new AppError(`article not found`, 404));
     res.status(200).json({
       status: "success",
       data: {
         article: article,
+        comments: comments,
       },
     });
   } catch (err) {
@@ -87,10 +90,12 @@ exports.getArticleById = async (req, res, next) => {
 exports.deleteArticle = async (req, res, next) => {
   try {
     const article = await Article.findByIdAndDelete(req.params.id);
+    const comments = await Comment.deleteMany({ belongsTo: req.params.id });
+
     if (!article) return next(new AppError(`article not found`, 404));
     res.status(204).json({
       status: "success",
-      message: "article deleted",
+      message: "article deleted with its comments",
     });
   } catch (err) {
     return next(new AppError(err, 500));
