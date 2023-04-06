@@ -1,29 +1,29 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const commentSchema = new mongoose.Schema({
-    user: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-    },
+const commentSchema = new mongoose.Schema(
+  {
     content: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     status: {
-        type: String,
-        enum: ['accepted', 'pending', 'rejected'],
-        default: 'pending'
+      type: String,
+      enum: ["accepted", "pending", "rejected"],
+      default: "pending",
     },
-    postedAt: {
-        type: Date,
-        default: Date.now
+    belongTo: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: "Article",
     },
-    image: {
-        data: Buffer,
-        contentType: String
-    }
-});
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+  },
+  { timestamps: true }
+);
 
-const CommentModel = mongoose.model('Comment', commentSchema)
+const Comment = mongoose.model("Comment", commentSchema);
 
-module.exports = CommentModel;
+module.exports = Comment;
