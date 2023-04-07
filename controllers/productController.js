@@ -144,7 +144,7 @@ exports.getAllProducts = async (req, res, next) => {
 
 exports.getProduct = async (req, res, next) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findById(req.params.id).populate('owner', 'firstName lastName email images');
     if (!product) return next(new AppError(`Product not found`, 404));
     res.status(200).json({
       status: 'success',
@@ -209,7 +209,7 @@ exports.updateProduct = [
 ];
 
 exports.getPendingProducts = async (req, res, next) => {
-    const products = await Product.find({status: 'pending'}); // only pending supplies
+    const products = await Product.find({status: 'pending'}).populate('owner', 'firstName lastName email images'); // only pending supplies
     try {
         res.status(200).json({
             status: 'success',
@@ -258,7 +258,7 @@ exports.rejectProduct = async (req, res, next) => {
 };
 
 exports.getAcceptedProducts = async (req, res, next) => {
-    const products = await Product.find({status: 'accepted'}); // only accepted supplies
+    const products = await Product.find({status: 'accepted'}).populate('owner', 'firstName lastName email images'); // only accepted supplies
     try {
         res.status(200).json({
             status: 'success',
