@@ -64,6 +64,9 @@ exports.addRequest = [
                                 type: req.body.type,
                                 targetValue: req.body.targetValue,
                                 currentValue: req.body.currentValue,
+                                isApproved: false,
+                                itemType: req.body.itemType,
+                                requestTitle: req.body.requestTitle,
                                 requestImage: imageUrls,
                                 notes: req.body.notes,
                             });
