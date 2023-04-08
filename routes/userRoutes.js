@@ -9,6 +9,16 @@ const router = express.Router();
 router.post("/signup", authController.signup);
 router.post("/login", authController.login);
 router.post("/enable2FA", authController.protect, authController.enable2FA);
+router.get(
+  "/findActive",
+  authController.protect,
+  userController.getVerifiedUsers
+);
+router.get(
+  "/findInactive",
+  authController.protect,
+  userController.getUnverifiedUsers
+);
 router.post("/forgotPassword", authController.forgotPassword);
 router.post("/checkEmail", authController.checkEmail);
 router.get("/email-verification/:id", userController.checkEmailVerification);

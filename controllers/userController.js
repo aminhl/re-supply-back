@@ -16,12 +16,36 @@ const filterObj = (obj, ...allowedFields) => {
 };
 
 exports.getAllUsers = async (req, res) => {
-  const users = await User.find();
+  let verified = req.query.verified;
+  let role = req.query.role;
+  console.log(verified);
+  console.log(role);
+  let criteria = {};
+
+  if (verified) criteria.verified = verified;
+  if (role) criteria.role = role;
+  let users = await User.find(criteria);
   res.status(200).json({
     status: "success",
     data: {
       users,
     },
+  });
+};
+
+exports.getVerifiedUsers = async (req, res) => {
+  const verifiedUsers = await User.find({ verified: true });
+  res.status(200).json({
+    status: "success",
+    data: verifiedUsers,
+  });
+};
+
+exports.getUnverifiedUsers = async (req, res) => {
+  const verifiedUsers = await User.find({ verified: false });
+  res.status(200).json({
+    status: "success",
+    data: verifiedUsers,
   });
 };
 
@@ -64,6 +88,7 @@ exports.deactivateAccount = async (req, res, next) => {
     data: null,
   });
 };
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, "public/uploads/");
