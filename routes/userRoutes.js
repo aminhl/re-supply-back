@@ -81,5 +81,6 @@ router
   );
 
 router.route("/delete/:id").delete(userController.deleteAccount);
+router.route("/upgrade/:id").patch(userController.upgradeToAdmin);
 
 module.exports = router;
