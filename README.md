@@ -27,4 +27,3 @@ The main objectives of ReSupply are:
 
 ## Conclusion:
 ReSupply is a platform that aims to help African students meet their educational supply needs. The platform offers a range of features, including donation management, shop and exchange, sharing knowledge, and community sections. With its innovative technology stack, ReSupply is set to revolutionize the way African students access educational supplies and enhance their studies.
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 13.3.9.
