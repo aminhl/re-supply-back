@@ -456,6 +456,7 @@ exports.resetPassword = async (req, res, next) => {
 //implement Passport Google OAuth
 
 passport.use(
+
   new GoogleStrategy(
     {
       // options for the Google strategy
@@ -499,6 +500,7 @@ exports.googleAuthRedirect = passport.authenticate("google", {
 // handle user after authentication
 exports.handleGoogleAuth = (req, res) => {
   createSendToken(req.user, 200, res);
+  res.set('Access-Control-Allow-Origin', 'http://localhost:4200');
 };
 
 // login with google
@@ -515,6 +517,7 @@ exports.googleLogin = passport.authenticate("google", {
     // create and send a token to the client
     const token = generateToken(req.user);
     res.status(200).json({ status: "success", token });
+    res.set('Access-Control-Allow-Origin', 'http://localhost:4200');
   };
 
 exports.updatePassword = async (req, res, next) => {

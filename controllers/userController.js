@@ -152,3 +152,23 @@ exports.deleteAccount = async (req, res) => {
     });
   }
 };
+
+exports.upgradeToAdmin = async (req, res) => {
+    try {
+        const user = await User.findByIdAndUpdate(req.params.id, {
+        role: "admin",
+        });
+        res.status(200).json({
+        status: "success",
+        data: {
+            user,
+        },
+        });
+    } catch (err) {
+        return res.status(404).json({
+        status: "fail",
+        message: err,
+        });
+    }
+
+}
