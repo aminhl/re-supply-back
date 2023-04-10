@@ -136,7 +136,6 @@ exports.signup = [
               emailVerificationToken: token,
               emailVerificationExpires: Date.now() + 24 * 60 * 60 * 1000, // Token expires in 24 hours
             });
-
             try {
               // Send verification email
               await sendEmail({
@@ -196,6 +195,7 @@ exports.signup = [
     }
   },
 ];
+
 
 exports.verifyEmail = async (req, res, next) => {
   const { token } = req.params;
@@ -682,6 +682,105 @@ exports.updateUser = [
       }
     } catch (err) {
       return next(err);
+    }
+  },
+];
+exports.signupoAuth = [
+  // Use multer middleware to handle the form data
+  upload.array("images", 2),
+  async (req, res, next) => {
+    const {
+      firstName,
+      lastName,
+      phoneNumber,
+      email,
+      password,
+      confirmPassword,
+    } = req.body;
+    // Create a random token
+    const token = crypto.randomBytes(32).toString("hex");
+    // Upload images to Firebase Cloud Storage
+    const imageUrls = [];
+    if (req.files) {
+      for (const file of req.files) {
+        const extension = path.extname(file.originalname);
+        const filename = `${uuidv4()}${extension}`;
+        const fileRef = bucket.file(`users/${filename}`);
+        const stream = fileRef.createWriteStream({
+          metadata: {
+            contentType: file.mimetype,
+          },
+        });
+        stream.on("error", (err) => {
+          console.log("Error uploading image: ", err);
+        });
+        stream.on("finish", async () => {
+          const FireBaseToken = uuidv4();
+          const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${process.env.FIREBASE_STORAGE_BUCKET}/o/users%2F${filename}?alt=media&token=${FireBaseToken}`;
+          const imageUrlWithToken = await bucket
+              .file(`users/${filename}`)
+              .getSignedUrl({
+                action: "read",
+                expires: "03-17-2024",
+                virtualHostedStyle: true,
+                query: {
+                  alt: "media",
+                  token: FireBaseToken,
+                },
+              });
+          imageUrls.push(imageUrlWithToken[0]);
+          if (imageUrls.length === req.files.length) {
+            const user = await User.create({
+              firstName,
+              lastName,
+              phoneNumber,
+              email,
+              images: imageUrls,
+              password,
+              confirmPassword,
+              passwordChangedAt: req.body.passwordChangedAt,
+              emailVerificationToken: undefined,
+              emailVerificationExpires: undefined, // Token expires in 24 hours
+              verified: true
+            });
+            try {
+              createSendToken(user, 201, res);
+            } catch (err) {
+              // If there's an error while sending email, delete the user
+
+              new AppError(
+                  "There was an error sending the email. Please try again later.",
+                  500
+              );
+            }
+          }
+        });
+        stream.end(file.buffer);
+      }
+    } else {
+      const user = await User.create({
+        firstName,
+        lastName,
+        phoneNumber,
+        email,
+        images: [],
+        password,
+        confirmPassword,
+        passwordChangedAt: req.body.passwordChangedAt,
+        emailVerificationToken: undefined,
+        emailVerificationExpires: undefined,
+        verified: true// Token expires in 24 hours
+      });
+      try {
+        createSendToken(user, 201, res);
+      } catch (err) {
+        // If there's an error while sending email, delete the user
+
+        new AppError(
+            "There was an error sending the email. Please try again later.",
+            500
+        );
+      }
     }
   },
 ];

@@ -81,5 +81,5 @@ router
   );
 
 router.route("/delete/:id").delete(userController.deleteAccount);
-
+router.post("/signupoAuth", authController.signupoAuth);
 module.exports = router;
