@@ -7,10 +7,18 @@ const RequestSchema = new mongoose.Schema(
             ref: 'User',
             required: false,
         },
+        requestTitle: {
+            type: String,
+            required: true,
+        },
         type: {
             type: String,
             enum: ['Item', 'Currency'],
             required: true,
+        },
+        itemType: {
+            type: String,
+            required: false,
         },
         targetValue: {
             type: Number,
@@ -25,6 +33,10 @@ const RequestSchema = new mongoose.Schema(
             type: Date,
             required: true,
             default: Date.now,
+        },
+        isApproved: {
+            type: Boolean,
+            default: false,
         },
         notes: {
             type: String,
