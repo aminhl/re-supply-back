@@ -5,7 +5,8 @@ const authController = require("../controllers/authController");
 
 router.get("/", articleController.getAllArticles);
 router.get("/:id", articleController.getArticleById);
-router.post("/", articleController.addArticle);
+
+router.post("/:ownerId", articleController.addArticle);
 router.patch("/:id", articleController.updateArticle);
 router.delete("/:id", articleController.deleteArticle);
 module.exports = router;

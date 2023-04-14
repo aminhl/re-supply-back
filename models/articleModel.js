@@ -2,8 +2,8 @@ const mongoose = require("mongoose");
 const Comment = require("./commentModel");
 const articleSchema = new mongoose.Schema(
   {
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
+    owner: {
+      type: mongoose.Schema.ObjectId,
       ref: "User",
     },
     title: {
