@@ -2,6 +2,7 @@ const AppError = require("./../utils/appError");
 const multer = require("multer");
 const { Article } = require("../models/articleModel");
 const Comment = require("../models/commentModel");
+const Product = require("../models/productModel");
 const FILE_TYPE_MAP = {
   "image/png": "png",
   "image/jpeg": "jpeg",
@@ -29,7 +30,7 @@ const uploadOptions = multer({ storage: storage });
 
 exports.addArticle = [
   uploadOptions.array("images"),
-  async (req, res) => {
+  async (req, res, next) => {
     const files = req.files;
     const basePath = `${req.protocol}://${req.get("host")}/uploads/articles/`;
 
@@ -43,18 +44,34 @@ exports.addArticle = [
     let article = new Article({
       title: req.body.title,
       description: req.body.description,
+      owner: req.params.ownerId,
       images: imagesPaths,
     });
+    console.log(article);
+    console.log(req.params);
     article = await article.save();
+    const popArticle = await Article.findById(article._id).populate(
+      "owner",
+      "firstName lastName email "
+    );
 
     if (!article) return res.status(500).send("The article cannot be created");
 
-    res.send(article);
+    res.status(201).json({
+      status: "success",
+      data: {
+        article: popArticle,
+      },
+    });
   },
 ];
 
 exports.getAllArticles = async (req, res, next) => {
-  const articles = await Article.find();
+  const articles = await Article.find().populate(
+    "owner",
+    "firstName lastName email images"
+  );
+
   try {
     res.status(200).json({
       status: "success",
@@ -70,6 +87,7 @@ exports.getAllArticles = async (req, res, next) => {
 exports.getArticleById = async (req, res, next) => {
   try {
     const article = await Article.findById(req.params.id).populate(
+      "owner",
       "commentsVirtual"
     );
     const comments = article.commentsVirtual;
