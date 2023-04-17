@@ -308,3 +308,19 @@ exports.getOwnerDetails = async (req, res, next) => {
         return next(new AppError(err, 500));
     }
 }
+
+exports.getProductsByOwner = async (req, res, next) => {
+    try {
+        const products = await Product.find({ owner: req.user.id }).populate('owner', 'firstName lastName email images');
+
+        res.status(200).json({
+            status: 'success',
+            data: {
+                products: products,
+            },
+        });
+    } catch (err) {
+        return next(new AppError(err, 500));
+    }
+};
+

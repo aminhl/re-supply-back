@@ -12,4 +12,6 @@ router.route("/pending").get(authController.protect, authController.restrictTo("
 router.route("/get/:id").get(authController.protect, authController.restrictTo("admin","member") ,productController.getProduct);
 router.route("/search").get(authController.protect, authController.restrictTo("admin","member") ,productController.searchProducts);
 router.route("/ownerDetails/:id").get(authController.protect, authController.restrictTo("admin","member") ,productController.getOwnerDetails);
+router.route("/owner-products").get(authController.protect, authController.restrictTo("admin", "member"), productController.getProductsByOwner);
+
 module.exports = router;
