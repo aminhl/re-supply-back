@@ -8,10 +8,10 @@ exports.addComment = async (req, res, next) => {
     // Create a new comment and set its belongTo field to the article _id
     const comment = new Comment({
       content: req.body.content,
-      belongTo: req.params.articleId,
-      userId: req.params.userId,
+      articleId: req.params.articleId,
+      commenters: req.params.commenters,
     });
-
+    console.log("cmnt", comment, articleId, userId);
     // Save the comment to the database
     const savedComment = await comment.save();
 

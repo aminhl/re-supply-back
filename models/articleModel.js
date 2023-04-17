@@ -19,15 +19,15 @@ const articleSchema = new mongoose.Schema(
         type: String,
       },
     ],
+    comments: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: "Comment",
+      },
+    ],
   },
   { timestamps: true }
 );
-
-articleSchema.virtual("commentsVirtual", {
-  ref: "Comment",
-  localField: "_id",
-  foreignField: "belongTo",
-});
 
 const Article = mongoose.model("Article", articleSchema);
 

@@ -67,10 +67,19 @@ exports.addArticle = [
 ];
 
 exports.getAllArticles = async (req, res, next) => {
-  const articles = await Article.find().populate(
-    "owner",
-    "firstName lastName email images"
-  );
+  let criteria = {};
+  let authorId = req.query._id;
+  criteria = criteria.authorId;
+
+  const articles = await Article.find(criteria)
+    .populate("owner", "firstName lastName email images")
+    .populate({
+      path: "comments",
+      populate: {
+        path: "userId",
+        select: "firstName lastName",
+      },
+    });
 
   try {
     res.status(200).json({
@@ -88,9 +97,8 @@ exports.getArticleById = async (req, res, next) => {
   try {
     const article = await Article.findById(req.params.id).populate(
       "owner",
-      "commentsVirtual"
+      "comments"
     );
-    const comments = article.commentsVirtual;
 
     if (!article) return next(new AppError(`article not found`, 404));
     res.status(200).json({
