@@ -8,8 +8,7 @@ const sendEmail = require("../utils/email");
 const multer = require("multer");
 const admin = require("firebase-admin");
 const serviceAccount = require("../firebase/resupply-379921-2f0e7acb17e7.json");
-
-
+const Product = require("../models/productModel");
 
 
 // Initialize the Firebase Admin SDK only once
@@ -124,7 +123,6 @@ exports.addRequest = [
 ];
 
 
-
 exports.getAllRequests = async (req, res) => {
     try {
         const requests = await Request.find().populate('requester_id');
@@ -139,7 +137,7 @@ exports.getRequestById = async (req, res) => {
     try {
         const request = await Request.findById(req.params.requestId).populate('requester_id');
         if (!request) {
-            return res.status(404).json({ message: 'Request not found' });
+            return res.status(404).json({message: 'Request not found'});
         }
         res.status(200).json(request);
     } catch (err) {
@@ -158,10 +156,10 @@ exports.updateRequest = async (req, res) => {
                 currentValue: req.body.currentValue,
                 notes: req.body.notes,
             },
-            { new: true }
+            {new: true}
         );
         if (!updatedRequest) {
-            return res.status(404).json({ message: 'Request not found' });
+            return res.status(404).json({message: 'Request not found'});
         }
         res.status(200).json(updatedRequest);
     } catch (err) {
@@ -171,12 +169,32 @@ exports.updateRequest = async (req, res) => {
 
 exports.deleteRequest = async (req, res) => {
     try {
-        const deletedRequest = await Request.findByIdAndDelete(req.params.requestId);
+        const deletedRequest = await Request.findByIdAndDelete(req.params.id);
         if (!deletedRequest) {
-            return res.status(404).json({ message: 'Request not found' });
+            return res.status(404).json({message: 'Request not found444'});
         }
         res.status(200).json(deletedRequest);
     } catch (err) {
         res.status(500).json(err);
+    }
+
+};
+
+exports.approveRequest = async (req, res) => {
+    try {
+        const request = await Request.findById(req.params.id);
+
+
+        if (!request) {
+            return res.status(404).json({message: 'Request not found'});
+        }
+
+        request.isApproved = true;
+        await request.save();
+
+        res.json(request);
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send('Server error');
     }
 };
