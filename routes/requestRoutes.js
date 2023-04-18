@@ -5,17 +5,9 @@ const authController = require("../controllers/authController");
 
 
 router.get('/', requestController.getAllRequests);
-
-
 router.get('/:id', requestController.getRequestById);
-
-
+router.delete('/:id',authController.protect, requestController.deleteRequest);
 router.post('/', authController.protect, requestController.addRequest);
-
-
+router.put('/approve/:id',authController.protect,requestController.approveRequest)
 router.put('/:id', requestController.updateRequest);
-
-
-router.delete('/:id', requestController.deleteRequest);
-
 module.exports = router;
