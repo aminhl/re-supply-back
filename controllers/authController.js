@@ -196,7 +196,6 @@ exports.signup = [
   },
 ];
 
-
 exports.verifyEmail = async (req, res, next) => {
   const { token } = req.params;
   console.log(req);
@@ -232,7 +231,13 @@ exports.enable2FA = async (req, res) => {
     data: null,
   });
 };
-
+exports.disable2FA = async (req, res) => {
+  await User.findByIdAndUpdate(req.user.id, { twoFactorAuth: false });
+  res.status(204).json({
+    status: "success",
+    data: null,
+  });
+};
 // First part of the logic to handle initial login process and check for Two Factor Authentication
 
 exports.login = async (req, res, next) => {
@@ -456,7 +461,6 @@ exports.resetPassword = async (req, res, next) => {
 //implement Passport Google OAuth
 
 passport.use(
-
   new GoogleStrategy(
     {
       // options for the Google strategy
@@ -500,7 +504,7 @@ exports.googleAuthRedirect = passport.authenticate("google", {
 // handle user after authentication
 exports.handleGoogleAuth = (req, res) => {
   createSendToken(req.user, 200, res);
-  res.set('Access-Control-Allow-Origin', 'http://localhost:4200');
+  res.set("Access-Control-Allow-Origin", "http://localhost:4200");
 };
 
 // login with google
@@ -517,7 +521,7 @@ exports.googleLogin = passport.authenticate("google", {
     // create and send a token to the client
     const token = generateToken(req.user);
     res.status(200).json({ status: "success", token });
-    res.set('Access-Control-Allow-Origin', 'http://localhost:4200');
+    res.set("Access-Control-Allow-Origin", "http://localhost:4200");
   };
 
 exports.updatePassword = async (req, res, next) => {
@@ -610,17 +614,16 @@ exports.facebookLogin = passport.authenticate("facebook", { scope: ["email"] });
     createSendToken(req.user, 200, res);
   };
 
-
 exports.updateUser = [
   // Use multer middleware to handle the form data
-  upload.array('images', 2),
+  upload.array("images", 2),
   async (req, res, next) => {
     try {
       // Find the user to update by ID
       const user = await User.findById(req.user.id);
 
       if (!user) {
-        return next(new AppError('User not found', 404));
+        return next(new AppError("User not found", 404));
       }
 
       // Update the user with the new data
@@ -641,30 +644,30 @@ exports.updateUser = [
               contentType: file.mimetype,
             },
           });
-          stream.on('error', (err) => {
-            console.log('Error uploading image: ', err);
+          stream.on("error", (err) => {
+            console.log("Error uploading image: ", err);
           });
-          stream.on('finish', async () => {
+          stream.on("finish", async () => {
             const FireBaseToken = uuidv4();
             const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${process.env.FIREBASE_STORAGE_BUCKET}/o/users%2F${filename}?alt=media&token=${FireBaseToken}`;
             const imageUrlWithToken = await bucket
-                .file(`users/${filename}`)
-                .getSignedUrl({
-                  action: 'read',
-                  expires: '03-17-2024',
-                  virtualHostedStyle: true,
-                  query: {
-                    alt: 'media',
-                    token: FireBaseToken,
-                  },
-                });
+              .file(`users/${filename}`)
+              .getSignedUrl({
+                action: "read",
+                expires: "03-17-2024",
+                virtualHostedStyle: true,
+                query: {
+                  alt: "media",
+                  token: FireBaseToken,
+                },
+              });
             imageUrls.push(imageUrlWithToken[0]);
             if (imageUrls.length === req.files.length) {
               user.images = [...user.images.slice(1), ...imageUrls];
               // Save the updated user to the database
               await user.save();
               res.status(200).json({
-                status: 'success',
+                status: "success",
                 data: {
                   user,
                 },
@@ -677,7 +680,7 @@ exports.updateUser = [
         // Save the updated user to the database if there's no new image
         await user.save();
         res.status(200).json({
-          status: 'success',
+          status: "success",
           data: {
             user,
           },
@@ -721,16 +724,16 @@ exports.signupoAuth = [
           const FireBaseToken = uuidv4();
           const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${process.env.FIREBASE_STORAGE_BUCKET}/o/users%2F${filename}?alt=media&token=${FireBaseToken}`;
           const imageUrlWithToken = await bucket
-              .file(`users/${filename}`)
-              .getSignedUrl({
-                action: "read",
-                expires: "03-17-2024",
-                virtualHostedStyle: true,
-                query: {
-                  alt: "media",
-                  token: FireBaseToken,
-                },
-              });
+            .file(`users/${filename}`)
+            .getSignedUrl({
+              action: "read",
+              expires: "03-17-2024",
+              virtualHostedStyle: true,
+              query: {
+                alt: "media",
+                token: FireBaseToken,
+              },
+            });
           imageUrls.push(imageUrlWithToken[0]);
           if (imageUrls.length === req.files.length) {
             const user = await User.create({
@@ -744,7 +747,7 @@ exports.signupoAuth = [
               passwordChangedAt: req.body.passwordChangedAt,
               emailVerificationToken: undefined,
               emailVerificationExpires: undefined, // Token expires in 24 hours
-              verified: true
+              verified: true,
             });
             try {
               createSendToken(user, 201, res);
@@ -752,8 +755,8 @@ exports.signupoAuth = [
               // If there's an error while sending email, delete the user
 
               new AppError(
-                  "There was an error sending the email. Please try again later.",
-                  500
+                "There was an error sending the email. Please try again later.",
+                500
               );
             }
           }
@@ -772,7 +775,7 @@ exports.signupoAuth = [
         passwordChangedAt: req.body.passwordChangedAt,
         emailVerificationToken: undefined,
         emailVerificationExpires: undefined,
-        verified: true// Token expires in 24 hours
+        verified: true, // Token expires in 24 hours
       });
       try {
         createSendToken(user, 201, res);
@@ -780,16 +783,10 @@ exports.signupoAuth = [
         // If there's an error while sending email, delete the user
 
         new AppError(
-            "There was an error sending the email. Please try again later.",
-            500
+          "There was an error sending the email. Please try again later.",
+          500
         );
       }
     }
   },
 ];
-
-
-
-
-
-

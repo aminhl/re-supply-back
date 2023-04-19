@@ -9,6 +9,7 @@ const router = express.Router();
 router.post("/signup", authController.signup);
 router.post("/login", authController.login);
 router.post("/enable2FA", authController.protect, authController.enable2FA);
+router.post("/disable2FA", authController.protect, authController.disable2FA);
 router.get(
   "/findActive",
   authController.protect,
@@ -82,10 +83,7 @@ router
 
 router.route("/delete/:id").delete(userController.deleteAccount);
 
-
-
 router.route("/upgrade/:id").patch(userController.upgradeToAdmin);
-
 
 router.post("/signupoAuth", authController.signupoAuth);
 
