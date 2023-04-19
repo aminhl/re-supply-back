@@ -5,7 +5,7 @@ const authController = require("../controllers/authController");
 
 router.get("/", commentController.getAllComments);
 router.get("/:id", commentController.getCommentById);
-router.post("/:articleId/:commenters", commentController.addComment);
+router.post("/:articleId/:commenterId", commentController.addComment);
 router.patch(
   "/:id/:userId",
   authController.protect,

@@ -68,15 +68,19 @@ exports.addArticle = [
 
 exports.getAllArticles = async (req, res, next) => {
   let criteria = {};
-  let authorId = req.query._id;
-  criteria = criteria.authorId;
-
+  let authorId = req.query.authorId;
+  console.log(authorId);
+  if (authorId) criteria.owner = authorId;
+  console.log(criteria);
   const articles = await Article.find(criteria)
-    .populate("owner", "firstName lastName email images")
+    .populate({
+      path: "owner",
+      select: "firstName lastName email images",
+    })
     .populate({
       path: "comments",
       populate: {
-        path: "userId",
+        path: "commenterId",
         select: "firstName lastName",
       },
     });
