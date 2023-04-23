@@ -311,7 +311,7 @@ exports.getOwnerDetails = async (req, res, next) => {
 
 exports.getProductsByOwner = async (req, res, next) => {
     try {
-        const products = await Product.find({ owner: req.user.id },{status: 'accepted'}).populate('owner', 'firstName lastName email images');
+        const products = await Product.find({ owner: req.user.id , status:'accepted'}).populate('owner', 'firstName lastName email images');
 
         res.status(200).json({
             status: 'success',

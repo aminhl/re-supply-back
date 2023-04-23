@@ -322,6 +322,7 @@ exports.login = async (req, res, next) => {
 
 exports.checkEmail = async (req, res, next) => {
   const email = req.body.email;
+  console.log(email);
   try {
     const user = await User.findOne({ email });
     if (user) res.json({ exists: true });
