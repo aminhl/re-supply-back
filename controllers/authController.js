@@ -198,8 +198,6 @@ exports.signup = [
 
 exports.verifyEmail = async (req, res, next) => {
   const { token } = req.params;
-  console.log(req);
-  console.log(req.params);
   // Find the user with the given token and check if the token is still valid
   const user = await User.findOne({
     emailVerificationToken: token,
@@ -390,7 +388,6 @@ exports.restrictTo = (...roles) => {
 
 exports.forgotPassword = async (req, res, next) => {
   // 1) Get User based on POSTed email
-  console.log(req.body);
   const user = await User.findOne({ email: req.body.email });
   if (!user)
     return next(
