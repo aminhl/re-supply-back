@@ -68,9 +68,11 @@ exports.addArticle = [
 
 exports.getAllArticles = async (req, res, next) => {
   let criteria = {};
-  let authorId = req.query.authorId;
+  let authorId = req.query.owner;
   console.log(authorId);
-  if (authorId) criteria.owner = authorId;
+  if (authorId) {
+    criteria.owner = authorId;
+  }
   console.log(criteria);
   const articles = await Article.find(criteria)
     .populate({
@@ -99,17 +101,24 @@ exports.getAllArticles = async (req, res, next) => {
 
 exports.getArticleById = async (req, res, next) => {
   try {
-    const article = await Article.findById(req.params.id).populate(
-      "owner",
-      "comments"
-    );
+    const article = await Article.findById(req.params.id)
+      .populate({
+        path: "owner",
+        select: "firstName lastName email images",
+      })
+      .populate({
+        path: "comments",
+        populate: {
+          path: "commenterId",
+          select: "firstName lastName",
+        },
+      });
 
     if (!article) return next(new AppError(`article not found`, 404));
     res.status(200).json({
       status: "success",
       data: {
         article: article,
-        comments: comments,
       },
     });
   } catch (err) {
@@ -120,7 +129,7 @@ exports.getArticleById = async (req, res, next) => {
 exports.deleteArticle = async (req, res, next) => {
   try {
     const article = await Article.findByIdAndDelete(req.params.id);
-    const comments = await Comment.deleteMany({ belongsTo: req.params.id });
+    const comments = await Comment.deleteMany({ comments: req.params.id });
 
     if (!article) return next(new AppError(`article not found`, 404));
     res.status(204).json({
