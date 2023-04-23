@@ -2,14 +2,13 @@ const mongoose = require('mongoose');
 const {default: validator} = require("validator");
 
 const feedbackSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: [true, 'A feedback must have a name'],
+    user: {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User',
     },
-    email: {
+    title: {
         type: String,
-        required: [true, 'A feedback must have an email'],
-        validate: [validator.isEmail, 'Please provide a valid email address']
+        required: [true, 'A feedback must have a title'],
     },
     message: {
         type: String,

@@ -3,21 +3,22 @@ const AppError = require('../utils/appError');
 
 exports.addFeedback = async (req, res, next) => {
     const feedback = await Feedback.create({
-        name: req.body.name,
-        email: req.body.email,
+        user: req.user.id,
+        title: req.body.title,
         message: req.body.message,
     });
     try {
         res.status(201).json({
-        status: 'success',
-        data: {
-            feedback,
-        },
+            status: 'success',
+            data: {
+                feedback,
+            },
         });
     } catch (err) {
         return next(new AppError(err, 500));
     }
 }
+
 
 exports.getAllFeedbacks = async (req, res, next) => {
     const feedbacks = await Feedback.find();
@@ -35,7 +36,7 @@ exports.getAllFeedbacks = async (req, res, next) => {
 
 exports.getFeedback = async (req, res, next) => {
     try {
-        const feedback = await Feedback.findById(req.params.id);
+        const feedback = await Feedback.findById(req.user.id);
         if (!feedback) return next(new AppError(`Feedback not found`, 404));
         res.status(200).json({
         status: 'success',
@@ -49,7 +50,7 @@ exports.getFeedback = async (req, res, next) => {
 }
 exports.deleteFeedback = async (req, res, next) => {
     try {
-        const feedback = await Feedback.findByIdAndDelete(req.params.id);
+        const feedback = await Feedback.findByIdAndDelete(req.user.id);
         if (!feedback) {
             return next(new AppError(`Feedback not found`, 404));
         }
@@ -64,7 +65,7 @@ exports.deleteFeedback = async (req, res, next) => {
 
 exports.updateFeedback = async (req, res, next) => {
     try {
-        const feedback = await Feedback.findByIdAndUpdate(req.params.id, req.body, {
+        const feedback = await Feedback.findByIdAndUpdate(req.user.id, req.body, {
         new: true,
         runValidators: true,
         });
@@ -76,20 +77,4 @@ exports.updateFeedback = async (req, res, next) => {
     } catch (err) {
         return next(new AppError(err, 500));
     }
-}
-
-exports.getFeedbackByName = async (req, res, next) => {
-    try {
-        const feedback = await Feedback.find({ name: req.params.name });
-        if (feedback.length===0) return next(new AppError(`Feedback not found`, 404));
-        res.status(200).json({
-            status: 'success',
-            data: {
-                feedback,
-            },
-        });
-    } catch (err) {
-        return next(new AppError(err, 500));
-    }
-
 }
