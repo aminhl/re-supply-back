@@ -1,8 +1,9 @@
 const express = require('express');
 const feedbackController = require('../controllers/feedbackController');
+const authController = require("../controllers/authController");
 const router = express.Router();
 
-router.route("/").post(feedbackController.addFeedback).get(feedbackController.getAllFeedbacks);
-router.route("/:id").delete(feedbackController.deleteFeedback).patch(feedbackController.updateFeedback);
-router.route("/get/:id").get(feedbackController.getFeedback);
+router.route("/").post(authController.protect, authController.restrictTo("admin","member") ,feedbackController.addFeedback).get(authController.protect, authController.restrictTo("admin","member") ,feedbackController.getAllFeedbacks);
+router.route("/:id").delete(authController.protect, authController.restrictTo("admin","member") ,feedbackController.deleteFeedback).patch(authController.protect, authController.restrictTo("admin","member") ,feedbackController.updateFeedback);
+router.route("/get/:id").get(authController.protect, authController.restrictTo("admin","member") ,feedbackController.getFeedback);
 module.exports = router;
