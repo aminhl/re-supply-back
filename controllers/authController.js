@@ -28,7 +28,15 @@ const bucket = admin.storage().bucket();
 
 // Create the multer upload object
 const upload = multer();
-const signToken = (id, role, firstName, lastName, email) => {
+const signToken = (
+  id,
+  role,
+  firstName,
+  lastName,
+  email,
+  stripeAccountId,
+  stripeCustomerId
+) => {
   return jwt.sign(
     {
       id: id,
@@ -36,6 +44,8 @@ const signToken = (id, role, firstName, lastName, email) => {
       firstName: firstName,
       lastName: lastName,
       email: email,
+      stripeAccountId: stripeAccountId,
+      stripeCustomerId: stripeCustomerId,
     },
     process.env.JWT_SECRET,
     {
@@ -50,7 +60,9 @@ const createSendToken = (user, statusCode, res) => {
     user.role,
     user.firstName,
     user.lastName,
-    user.email
+    user.email,
+    user.stripeAccountId,
+    user.stripeCustomerId
   );
   const cookieOptions = {
     expires: new Date(
@@ -125,7 +137,6 @@ exports.signup = [
             });
           imageUrls.push(imageUrlWithToken[0]);
           if (imageUrls.length === req.files.length) {
-
             const user = await User.create({
               firstName,
               lastName,
@@ -140,8 +151,8 @@ exports.signup = [
             });
             // Create the Stripe account and customer using the user's email
             const account = await stripe.accounts.create({
-              type: 'standard',
-              country: 'FR',
+              type: "standard",
+              country: "FR",
               email: user.email,
             });
 
