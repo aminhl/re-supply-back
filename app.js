@@ -12,6 +12,7 @@ const commentRouter = require("./routes/commentRoutes");
 const articleRouter = require("./routes/articleRoutes");
 const exchangeRouter = require("./routes/exchangeRoutes");
 const wishlistRouter = require("./routes/wishlistRoutes");
+const cartRouter = require("./routes/cartRoutes");
 const AppError = require("./utils/appError");
 const globalErrorHandler = require("./controllers/errorController");
 
@@ -52,6 +53,7 @@ app.use("/api/v1/comments", commentRouter);
 app.use("/api/v1/articles", articleRouter);
 app.use("/api/v1/exchanges", exchangeRouter);
 app.use("/api/v1/wishlists", wishlistRouter);
+app.use("/api/v1/carts", cartRouter);
 
 app.all("*", (req, res, next) => {
   if (req.originalUrl.startsWith("/uploads/articles")) return next();
