@@ -533,7 +533,6 @@ exports.googleAuthRedirect = passport.authenticate("google", {
 // handle user after authentication
 exports.handleGoogleAuth = (req, res) => {
   createSendToken(req.user, 200, res);
-  res.set("Access-Control-Allow-Origin", "http://localhost:4200");
 };
 
 // login with google
