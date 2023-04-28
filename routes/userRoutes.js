@@ -70,7 +70,7 @@ router
   .route("/")
   .get(
     authController.protect,
-    authController.restrictTo("admin", ""),
+    authController.restrictTo("admin", "member"),
     userController.getAllUsers
   );
 router
@@ -86,5 +86,6 @@ router.route("/delete/:id").delete(userController.deleteAccount);
 router.route("/upgrade/:id").patch(userController.upgradeToAdmin);
 
 router.post("/signupoAuth", authController.signupoAuth);
+router.post("/Sendmeetlink",authController.protect, authController.Sendmeetlink);
 
 module.exports = router;

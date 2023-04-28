@@ -788,3 +788,22 @@ exports.signupoAuth = [
     }
   },
 ];
+exports.Sendmeetlink =async (req,res,next) =>{
+  try {
+    const { url,email } = req.body;
+    // Send verification email
+    await sendEmail({
+      email: email,
+      subject: "ReSsuply invitation for meet",
+      message: `Room link: ${url}`,
+    });
+  } catch (err) {
+    // If there's an error while sending email, delete the user
+    return next(
+      new AppError(
+        "There was an error sending the email. Please try again later.",
+        500
+      )
+    );
+  }
+}
