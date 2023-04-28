@@ -54,7 +54,7 @@ exports.createOrder = async (req, res, next) => {
       },
       mode: "payment",
       success_url: "http://localhost:4200/orderSuccess",
-      cancel_url: "http://localhost:3000/cancel",
+      cancel_url: "http://localhost:4200/cart",
     });
 
     res.status(201).json({
