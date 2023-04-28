@@ -3,6 +3,7 @@ const Order = require('../models/orderModel');
 const Product = require('../models/productModel');
 const AppError = require('../utils/appError');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const User = require('../models/userModel');
 
 
 exports.createOrder = async (req, res, next) => {
@@ -34,27 +35,43 @@ exports.createOrder = async (req, res, next) => {
             quantity: products[index].quantity || 1,
         }));
 
-        // Create a checkout session with the line items
+        // Get the seller's stripe account id
+        const seller = await User.findById(productData[0].owner);
+        const sellerStripeAccountId = seller.stripeAccountId;
+
+        // Create a Checkout Session with the line items and seller's Stripe account id
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             line_items: lineItems,
+            payment_intent_data: {
+                application_fee_amount: lineItems.reduce((total, item) => total + item.price_data.unit_amount * item.quantity * 0.1, 0),
+                transfer_data: {
+                    destination: sellerStripeAccountId,
+                },
+            },
             mode: 'payment',
-            success_url: `${process.env.CLIENT_URL}/success`,
-            cancel_url: `${process.env.CLIENT_URL}/failed`,
+            success_url: 'http://localhost:3000/success',
+            cancel_url: 'http://localhost:3000/cancel',
         });
 
         res.status(201).json({
             status: 'success',
             data: {
                 order,
-                sessionId: session.id, // Return the session ID to the client
-                checkoutUrl: session.url,
+                session_id: session.id,
+                session_url: session.url
             },
         });
     } catch (err) {
         return next(err);
     }
 };
+
+
+
+
+
+
 
 
 

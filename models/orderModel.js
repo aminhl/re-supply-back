@@ -16,6 +16,10 @@ const orderSchema = new mongoose.Schema({
         type: Date,
         default: Date.now(),
     },
+    productOwner: {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User',
+    },
     user: {
         type: mongoose.Schema.ObjectId,
         ref: 'User',
