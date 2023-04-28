@@ -54,6 +54,8 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now(),
   },
+  stripeCustomerId: String,
+  stripeAccountId: String,
   passwordChangedAt: Date,
   passwordResetToken: String,
   passwordResetExpires: Date,

@@ -14,6 +14,7 @@ const client = require("twilio")(
   process.env.ACCOUNT_SID,
   process.env.AUTH_TOKEN
 );
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const serviceAccount = require("../firebase/resupply-379921-2f0e7acb17e7.json");
 
 const admin = require("firebase-admin");
@@ -27,7 +28,15 @@ const bucket = admin.storage().bucket();
 
 // Create the multer upload object
 const upload = multer();
-const signToken = (id, role, firstName, lastName, email) => {
+const signToken = (
+  id,
+  role,
+  firstName,
+  lastName,
+  email,
+  stripeAccountId,
+  stripeCustomerId
+) => {
   return jwt.sign(
     {
       id: id,
@@ -35,6 +44,8 @@ const signToken = (id, role, firstName, lastName, email) => {
       firstName: firstName,
       lastName: lastName,
       email: email,
+      stripeAccountId: stripeAccountId,
+      stripeCustomerId: stripeCustomerId,
     },
     process.env.JWT_SECRET,
     {
@@ -49,7 +60,9 @@ const createSendToken = (user, statusCode, res) => {
     user.role,
     user.firstName,
     user.lastName,
-    user.email
+    user.email,
+    user.stripeAccountId,
+    user.stripeCustomerId
   );
   const cookieOptions = {
     expires: new Date(
@@ -136,6 +149,22 @@ exports.signup = [
               emailVerificationToken: token,
               emailVerificationExpires: Date.now() + 24 * 60 * 60 * 1000, // Token expires in 24 hours
             });
+            // Create the Stripe account and customer using the user's email
+            const account = await stripe.accounts.create({
+              type: "standard",
+              country: "FR",
+              email: user.email,
+            });
+
+            const customer = await stripe.customers.create({
+              email: user.email,
+              name: `${firstName} ${lastName}`,
+              description: `Customer for ${user.email}`,
+            });
+            // Save the Stripe account and customer IDs to the user document
+            user.stripeAccountId = account.id;
+            user.stripeCustomerId = customer.id;
+            await user.save();
             try {
               // Send verification email
               await sendEmail({
@@ -170,6 +199,8 @@ exports.signup = [
         passwordChangedAt: req.body.passwordChangedAt,
         emailVerificationToken: token,
         emailVerificationExpires: Date.now() + 24 * 60 * 60 * 1000, // Token expires in 24 hours
+        stripeAccountId: account.id,
+        stripeCustomerId: customer.id,
       });
 
       try {
@@ -502,7 +533,6 @@ exports.googleAuthRedirect = passport.authenticate("google", {
 // handle user after authentication
 exports.handleGoogleAuth = (req, res) => {
   createSendToken(req.user, 200, res);
-  res.set("Access-Control-Allow-Origin", "http://localhost:4200");
 };
 
 // login with google
