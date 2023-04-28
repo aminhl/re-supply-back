@@ -59,19 +59,18 @@ exports.getCart = async (req, res, next) => {
         return next(new AppError(err, 500));
     }
 }
-
 exports.deleteProductFromCart = async (req, res, next) => {
     try {
-        const cart = await Cart.findOne({ user: req.user.id });
+        const cart = await Cart.findOne({ user: req.user.id }).populate('products');
         if (!cart) return next(new AppError(`Cart not found`, 404));
         const productInCart = cart.products.find(
-            (product) => product === req.params.id
+            (product) => product._id.toString() === req.params.id
         );
         if (!productInCart) {
             return next(new AppError(`Product not in cart`, 400));
         }
         cart.products = cart.products.filter(
-            (product) => product !== req.params.id
+            (product) => product._id.toString() !== req.params.id
         );
         await cart.save();
         res.status(200).json({
@@ -82,3 +81,4 @@ exports.deleteProductFromCart = async (req, res, next) => {
         return next(new AppError(err, 500));
     }
 }
+
