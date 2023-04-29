@@ -52,7 +52,7 @@ exports.addArticle = [
     article = await article.save();
     const popArticle = await Article.findById(article._id).populate(
       "owner",
-      "firstName lastName email "
+      "firstName lastName email images"
     );
 
     if (!article) return res.status(500).send("The article cannot be created");
@@ -83,7 +83,7 @@ exports.getAllArticles = async (req, res, next) => {
       path: "comments",
       populate: {
         path: "commenterId",
-        select: "firstName lastName",
+        select: "firstName lastName images",
       },
     });
 

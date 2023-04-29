@@ -56,12 +56,10 @@ exports.updateComment = async (req, res, next) => {
     );
     if (!comment) return next(new AppError(`Comment not found`, 404));
 
-    if (comment.userId !== req.user._id) {
-      res.status(200).json({
-        status: "success",
-        message: "Comment updated",
-      });
-    }
+    res.status(200).json({
+      status: "success",
+      message: "Comment updated",
+    });
   } catch (err) {
     return next(new AppError(err, 500));
   }
@@ -80,6 +78,22 @@ exports.getAllComments = async (req, res, next) => {
     return next(new AppError(err, 500));
   }
 };
+
+exports.getAllCommentsByArticle = async (req, res, next) => {
+  const articleId = req.params.articleId;
+  const comments = await Comment.find({ article: articleId });
+  try {
+    res.status(200).json({
+      status: "success",
+      data: {
+        comments,
+      },
+    });
+  } catch (err) {
+    return next(new AppError(err, 500));
+  }
+};
+
 exports.getCommentById = async (req, res, next) => {
   try {
     const comment = await Comment.findById(req.params.id);

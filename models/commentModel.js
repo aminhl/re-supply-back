@@ -11,12 +11,11 @@ const commentSchema = new mongoose.Schema(
       enum: ["accepted", "pending", "rejected"],
       default: "pending",
     },
-    commenterId: [
-      {
-        type: mongoose.Schema.ObjectId,
-        ref: "User",
-      },
-    ],
+    commenterId: {
+      type: mongoose.Schema.ObjectId,
+      ref: "User",
+    },
+
     articleId: {
       type: mongoose.Schema.ObjectId,
       ref: "Article",
