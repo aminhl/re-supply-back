@@ -4,18 +4,17 @@ const commentController = require("../controllers/commentController");
 const authController = require("../controllers/authController");
 
 router.get("/", commentController.getAllComments);
+router.get("/:articleId", commentController.getAllCommentsByArticle);
 router.get("/:id", commentController.getCommentById);
 router.post("/:articleId/:commenterId", commentController.addComment);
 router.patch(
-  "/:id/:userId",
-  authController.protect,
-  authController.restrictTo("admin", "member"),
+  "/:id",
+
   commentController.updateComment
 );
 router.delete(
-  "/:id/:userId",
-  authController.protect,
-  authController.restrictTo("admin", "member"),
+  "/:id",
+
   commentController.deleteComment
 );
 module.exports = router;
