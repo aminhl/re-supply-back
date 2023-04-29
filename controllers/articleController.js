@@ -3,6 +3,7 @@ const multer = require("multer");
 const { Article } = require("../models/articleModel");
 const Comment = require("../models/commentModel");
 const Product = require("../models/productModel");
+const Request = require("../models/requestModel");
 const FILE_TYPE_MAP = {
   "image/png": "png",
   "image/jpeg": "jpeg",
@@ -179,3 +180,21 @@ exports.updateArticle = [
     }
   },
 ];
+
+exports.approveArticle = async (req, res) => {
+  try {
+    const article = await Article.findById(req.params.id);
+
+    if (!article) {
+      return res.status(404).json({ message: "Request not found" });
+    }
+
+    article.isApproved = true;
+    await article.save();
+
+    res.json(article);
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send("Server error");
+  }
+};

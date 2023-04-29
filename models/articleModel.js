@@ -19,6 +19,10 @@ const articleSchema = new mongoose.Schema(
         type: String,
       },
     ],
+    isApproved: {
+      type: Boolean,
+      default: false,
+    },
     comments: [
       {
         type: mongoose.Schema.ObjectId,
