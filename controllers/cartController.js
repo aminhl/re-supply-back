@@ -28,20 +28,23 @@ exports.addProductToCart = async (req, res, next) => {
             );
             if (productInCart) {
                 return next(new AppError(`Product already in cart`, 400));
+            } else {
+                cart.products.push(req.body.productId);
+                await cart.save();
+                res.status(200).json({
+                    status: 'success',
+                    data: {
+                        cart,
+                    },
+                });
             }
-            cart.products.push(req.body.productId);
-            await cart.save();
-            res.status(200).json({
-                status: 'success',
-                data: {
-                    cart,
-                },
-            });
         }
     } catch (err) {
         return next(new AppError(err, 500));
     }
-}
+};
+
+
 
 exports.getCart = async (req, res, next) => {
     try {
@@ -65,7 +68,8 @@ exports.getCart = async (req, res, next) => {
     } catch (err) {
         return next(new AppError(err, 500));
     }
-}
+};
+
 exports.deleteProductFromCart = async (req, res, next) => {
     try {
         const cart = await Cart.findOne({ user: req.user.id }).populate('products');

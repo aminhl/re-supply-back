@@ -24,7 +24,7 @@ exports.addProductToWishlist = async (req, res, next) => {
             });
         } else {
             const productInWishlist = wishlist.products.find(
-                (product) => product === req.body.productId
+                (product) => product == req.body.productId
             );
             if (productInWishlist) {
                 return next(new AppError(`Product already in wishlist`, 400));
