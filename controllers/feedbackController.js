@@ -21,7 +21,7 @@ exports.addFeedback = async (req, res, next) => {
 
 
 exports.getAllFeedbacks = async (req, res, next) => {
-    const feedbacks = await Feedback.find();
+    const feedbacks = await Feedback.find().populate('user', 'firstName lastName email images');;
     try {
         res.status(200).json({
         status: 'success',
