@@ -154,21 +154,40 @@ exports.deleteAccount = async (req, res) => {
 };
 
 exports.upgradeToAdmin = async (req, res) => {
-    try {
-        const user = await User.findByIdAndUpdate(req.params.id, {
-        role: "admin",
-        });
-        res.status(200).json({
-        status: "success",
-        data: {
-            user,
-        },
-        });
-    } catch (err) {
-        return res.status(404).json({
-        status: "fail",
-        message: err,
-        });
-    }
+  try {
+    const user = await User.findByIdAndUpdate(req.params.id, {
+      role: "admin",
+    });
+    res.status(200).json({
+      status: "success",
+      data: {
+        user,
+      },
+    });
+  } catch (err) {
+    return res.status(404).json({
+      status: "fail",
+      message: err,
+    });
+  }
+};
 
-}
+exports.searchChatUsers = async (req, res, next) => {
+  try {
+    const keyword = req.query.search
+      ? {
+          $or: [
+            { firstName: { $regex: req.query.search, $options: "i" } },
+            { lastName: { $regex: req.query.search, $options: "i" } },
+            { email: { $regex: req.query.search, $options: "i" } },
+          ],
+        }
+      : {};
+
+    const users = await User.find(keyword).find({ _id: { $ne: req.user._id } });
+    res.send(users);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Internal server error");
+  }
+};

@@ -13,28 +13,29 @@ const articleRouter = require("./routes/articleRoutes");
 const exchangeRouter = require("./routes/exchangeRoutes");
 const wishlistRouter = require("./routes/wishlistRoutes");
 const cartRouter = require("./routes/cartRoutes");
+const chatRouter = require("./routes/chatRoutes");
 const AppError = require("./utils/appError");
 const globalErrorHandler = require("./controllers/errorController");
 
 const app = express();
 app.use((req, res, next) => {
-    res.setHeader("Access-Control-Allow-Origin", "http://localhost:4200");
-    res.setHeader("Access-Control-Allow-Credentials", true);
-    next();
+  res.setHeader("Access-Control-Allow-Origin", "http://localhost:4200");
+  res.setHeader("Access-Control-Allow-Credentials", true);
+  next();
 });
 
 // MIDDLEWARES
 app.use(
-    cors({
-        credentials: true,
-        origin: "http://localhost:4200",
-    })
+  cors({
+    credentials: true,
+    origin: "http://localhost:4200",
+  })
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 const corsOptions = {
-    origin: true,
-    credentials: true,
+  origin: true,
+  credentials: true,
 };
 app.use(cors(corsOptions));
 
@@ -54,6 +55,7 @@ app.use("/api/v1/articles", articleRouter);
 app.use("/api/v1/exchanges", exchangeRouter);
 app.use("/api/v1/wishlists", wishlistRouter);
 app.use("/api/v1/carts", cartRouter);
+app.use("/api/v1/chat", chatRouter);
 
 app.all("*", (req, res, next) => {
   if (req.originalUrl.startsWith("/uploads/articles")) return next();
