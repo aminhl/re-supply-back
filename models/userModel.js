@@ -64,6 +64,11 @@ const userSchema = new mongoose.Schema({
     default: true,
     select: false,
   },
+  isChatAdmin: {
+    type: Boolean,
+    required: true,
+    default: false,
+  },
   verified: {
     type: Boolean,
     default: false,
