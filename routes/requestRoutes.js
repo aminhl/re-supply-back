@@ -6,8 +6,10 @@ const authController = require("../controllers/authController");
 
 router.get('/', requestController.getAllRequests);
 router.get('/:id', requestController.getRequestById);
-router.delete('/:id',authController.protect, requestController.deleteRequest);
+router.get('/owner-requests',authController.protect, requestController.getRequestsByOwner);
+router.delete('/:id', authController.protect, requestController.deleteRequest);
 router.post('/', authController.protect, requestController.addRequest);
-router.put('/approve/:id',authController.protect,requestController.approveRequest)
+router.put('/approve/:id', authController.protect, requestController.approveRequest)
 router.put('/:id', requestController.updateRequest);
+
 module.exports = router;
