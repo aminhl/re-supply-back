@@ -63,6 +63,7 @@ exports.addProduct = [
                                 price: req.body.price,
                                 owner: req.user.id,
                                 images: imageUrls,
+                                status: req.user.role === "admin" ? "accepted" : "pending",
                             });
 
                             // Save the product to the database
@@ -96,6 +97,7 @@ exports.addProduct = [
                     price: req.body.price,
                     owner: req.user.id,
                     images: [],
+                    status: req.user.role === "admin" ? "accepted" : "pending",
                 });
 
                 // Save the product to the database

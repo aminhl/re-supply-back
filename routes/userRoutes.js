@@ -66,6 +66,7 @@ router.delete(
   userController.deactivateAccount
 );
 router.get("/user", authController.protect, userController.getUser);
+
 router
   .route("/")
   .get(
@@ -73,6 +74,14 @@ router
     authController.restrictTo("admin", "member"),
     userController.getAllUsers
   );
+router
+  .route("/chatUsers")
+  .get(
+    authController.protect,
+    authController.restrictTo("admin", "member"),
+    userController.searchChatUsers
+  );
+
 router
   .route("/update")
   .patch(
@@ -86,6 +95,10 @@ router.route("/delete/:id").delete(userController.deleteAccount);
 router.route("/upgrade/:id").patch(userController.upgradeToAdmin);
 
 router.post("/signupoAuth", authController.signupoAuth);
-router.post("/Sendmeetlink",authController.protect, authController.Sendmeetlink);
+router.post(
+  "/Sendmeetlink",
+  authController.protect,
+  authController.Sendmeetlink
+);
 
 module.exports = router;

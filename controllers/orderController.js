@@ -28,7 +28,7 @@ exports.createOrder = async (req, res, next) => {
         product_data: {
           name: product.name,
           description: product.description,
-          images: [product.image],
+          images: [product.images[0]],
         },
       },
       quantity: products[index].quantity || 1,
@@ -69,6 +69,66 @@ exports.createOrder = async (req, res, next) => {
     return next(err);
   }
 };
+exports.createSingleOrder = async (req, res, next) => {
+  try {
+    const productId = req.body.productId;
+    const product = await Product.findById(productId);
+    console.log(product);
+
+    // Create new order
+    const order = await Order.create({
+      products: { product: product },
+      user: req.user.id,
+    });
+
+    // Create line item for product
+    const lineItem = {
+      price_data: {
+        currency: "usd",
+        unit_amount: product.price * 100,
+        product_data: {
+          name: product.name,
+          description: product.description,
+          images: [product.images[0]],
+        },
+      },
+      quantity: 1,
+    };
+
+    // Get the seller's stripe account id
+    const seller = await User.findById(product.owner);
+    const sellerStripeAccountId = seller.stripeAccountId;
+
+    // Create a Checkout Session with the line item and seller's Stripe account id
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items: [lineItem],
+      payment_intent_data: {
+        application_fee_amount: lineItem.price_data.unit_amount * lineItem.quantity * 0.1,
+        transfer_data: {
+          destination: sellerStripeAccountId,
+        },
+      },
+      mode: "payment",
+      success_url: "http://localhost:4200/orderSuccess",
+      cancel_url: "http://localhost:4200/products",
+    });
+
+    res.status(201).json({
+      status: "success",
+      data: {
+        order,
+        session_id: session.id,
+        session_url: session.url,
+      },
+    });
+  } catch (err) {
+    return next(err);
+  }
+};
+
+
+
 
 exports.getAllOrders = async (req, res, next) => {
   try {
