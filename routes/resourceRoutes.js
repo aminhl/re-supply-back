@@ -9,4 +9,5 @@ router.route("/reject/:id").patch(resourceController.rejectResource);
 router.route("/accepted").get(resourceController.getAcceptedResources);
 router.route("/pending").get(resourceController.getPendingResource);
 router.route("/get/:id").get(resourceController.getResource);
+
 module.exports = router;
