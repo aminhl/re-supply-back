@@ -93,4 +93,17 @@ exports.deleteProductFromCart = async (req, res, next) => {
     return next(new AppError(err, 500));
   }
 };
-
+exports.deleteAllProductsFromCart = async (req, res, next) => {
+  try {
+    const cart = await Cart.findOne({ user: req.user.id }).populate("products");
+    if (!cart) return next(new AppError(`Cart not found`, 404));
+    cart.products = [];
+    await cart.save();
+    res.status(200).json({
+      status: "success",
+      message: "All products deleted from cart successfully.",
+    });
+  } catch (err) {
+    return next(new AppError(err, 500));
+  }
+};
