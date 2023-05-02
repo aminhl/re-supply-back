@@ -114,7 +114,7 @@ const renameGroup = async (req, res) => {
     }
   )
     .populate("users", "-password -confirmPassword")
-    .populate("groupAdmin", "-password confirmPassword");
+    .populate("groupAdmin", "-password -confirmPassword");
 
   if (!updatedChat) {
     res.status(404);
@@ -157,7 +157,7 @@ const addToGroup = async (req, res) => {
   const added = await Chat.findByIdAndUpdate(
     chatId,
     {
-      $push: { users: userId },
+      $addToSet: { users: userId },
     },
     {
       new: true,
