@@ -197,4 +197,21 @@ exports.approveRequest = async (req, res) => {
         console.error(error.message);
         res.status(500).send('Server error');
     }
+
+
+
+};
+
+exports.getRequestsByOwner = async (req, res, next) => {
+    try {
+        const requests = await Request.find({ requester_id: req.user.id });
+        res.status(200).json({
+            status: 'success',
+            data: {
+                requests: requests,
+            },
+        });
+    } catch (err) {
+        return next(new AppError(err, 500));
+    }
 };
