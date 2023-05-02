@@ -22,10 +22,9 @@ const resourcesSchema = new mongoose.Schema({
         type: Date,
         default: Date.now()
     },
-    link: {
-        type: String,
-        required :[true,'A resouces must have a path File/Video'],
-    }
+    files: [String],
+    image: [String],
+
 });
 
 const Resource = mongoose.model('Resource', resourcesSchema);
