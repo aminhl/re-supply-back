@@ -16,6 +16,7 @@ const cartRouter = require("./routes/cartRoutes");
 const scheduleMeetingRouter = require("./routes/ScheduleMeetingRoutes");
 const ParticipationEvents = require("./routes/ParticipationEventsRoutes");
 const chatRouter = require("./routes/chatRoutes");
+const messageRouter = require("./routes/messageRoutes");
 const AppError = require("./utils/appError");
 const globalErrorHandler = require("./controllers/errorController");
 
@@ -60,6 +61,8 @@ app.use("/api/v1/carts", cartRouter);
 app.use("/api/v1/ScheduleMeeting", scheduleMeetingRouter);
 app.use("/api/v1/ParticipationEvents", ParticipationEvents);
 app.use("/api/v1/chat", chatRouter);
+app.use("/api/v1/message", messageRouter);
+
 app.all("*", (req, res, next) => {
   if (req.originalUrl.startsWith("/uploads/articles")) return next();
   next(new AppError(`can't find ${req.originalUrl} on this server`, 404));
