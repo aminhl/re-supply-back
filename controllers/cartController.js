@@ -59,7 +59,7 @@ exports.getCart = async (req, res, next) => {
       })
       .populate("user", "firstName lastName");
 
-    if (!cart) return next(new AppError(`Cart not found`, 404));
+    if (!cart) return next(new AppError(`Cart not found`, 200));
     res.status(200).json({
       status: "success",
       data: {
@@ -74,7 +74,7 @@ exports.getCart = async (req, res, next) => {
 exports.deleteProductFromCart = async (req, res, next) => {
   try {
     const cart = await Cart.findOne({ user: req.user.id }).populate("products");
-    if (!cart) return next(new AppError(`Cart not found`, 404));
+    if (!cart) return next(new AppError(`Cart not found`, 200));
     const productInCart = cart.products.find(
       (product) => product._id.toString() === req.params.id
     );
@@ -96,7 +96,7 @@ exports.deleteProductFromCart = async (req, res, next) => {
 exports.deleteAllProductsFromCart = async (req, res, next) => {
   try {
     const cart = await Cart.findOne({ user: req.user.id }).populate("products");
-    if (!cart) return next(new AppError(`Cart not found`, 404));
+    if (!cart) return next(new AppError(`Cart not found`, 200));
     cart.products = [];
     await cart.save();
     res.status(200).json({
