@@ -1,5 +1,6 @@
 const Donation = require('../models/donationModel');
 const Web3 = require("web3");
+const Request = require('../models/requestModel');
 
 // Create new donation
 const createDonation = async (req, res) => {
@@ -70,6 +71,24 @@ const deleteDonation = async (req, res) => {
     }
 };
 
+const axios = require('axios');
+
+async function convertETHtoUSD(ethAmount) {
+    try {
+        // Get the current ETH price in USD
+        const response = await axios
+          .get('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd');
+        const ethPrice = response.data.ethereum.usd;
+
+        // Convert the ETH amount to USD
+        const usdAmount = ethAmount * ethPrice;
+
+        return usdAmount.toFixed(2); // Specify 2 decimal places for USD amount
+    } catch (error) {
+        console.error(error);
+    }
+}
+
 const sendETHFunc = (fromAddress, toAddress, privateKey, amount) => {
     // Connect to an Ethereum node
     const web3 = new Web3(
@@ -104,9 +123,14 @@ const sendETHFunc = (fromAddress, toAddress, privateKey, amount) => {
 };
 
 const sendETH = async (req, res) => {
+    const requestId = req.params.requestId;
+    const request = await Request.findById(requestId);
     const { fromAddress, toAddress, privateKey, amount } = req.body;
     try {
         const hash = await sendETHFunc(fromAddress, toAddress, privateKey, amount);
+        const usdAmount = await convertETHtoUSD(amount);
+        request.currentValue += +usdAmount;
+        await request.save();
         res.status(200).json({ message: "Transaction sent", hash });
     } catch (error) {
         res.status(500).json({ message: "Failed to send transaction", error });
