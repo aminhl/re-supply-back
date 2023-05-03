@@ -6,6 +6,7 @@ const path = require("path");
 const { v4: uuidv4 } = require("uuid");
 const admin = require("firebase-admin");
 const User = require("../models/userModel");
+const Product = require("../models/productModel");
 
 // Initialize the Firebase Admin SDK only once
 if (!admin.apps.length) {
@@ -75,8 +76,20 @@ exports.addResource = [
                             await resource.save();
 
                             // Populate the response with the owner details, files and image
+                            const populatedRessource = await Resource.findById(resource._id)
+                              .populate("user", "firstName lastName email images")
+                              .populate({
+                                  path: "user",
+                                  populate: {
+                                      path: "images",
+                                  },
+                              });
+                            console.log(populatedRessource)
                             res.status(201).json({
                                 status: "success",
+                                data: {
+                                    product: populatedRessource,
+                                },
                             });
                         }
                     });
@@ -124,8 +137,20 @@ exports.addResource = [
                         await resource.save();
 
                         // Populate the response with the owner details, files and image
+                        const populatedRessource = await Resource.findById(resource._id)
+                          .populate("user", "firstName lastName email images")
+                          .populate({
+                              path: "user",
+                              populate: {
+                                  path: "images",
+                              },
+                          });
+
                         res.status(201).json({
                             status: "success",
+                            data: {
+                                product: populatedRessource,
+                            },
                         });
                     }
                 });
@@ -137,7 +162,7 @@ exports.addResource = [
     },
 ];
     exports.getAllResources = async (req, res, next) => {
-    const resources = await Resource.find();
+    const resources = await Resource.find().populate('user', 'firstName lastName email images');
     try {
         res.status(200).json({
             status: 'success',
@@ -151,7 +176,7 @@ exports.addResource = [
 };
 exports.getResource = async (req, res, next) => {
     try {
-        const resource = await Resource.findById(req.params.id);
+        const resource = await Resource.findById(req.params.id).populate('user', 'firstName lastName email images');
         if (!resource) return next(new AppError(`Resource not found`, 404));
         res.status(200).json({
             status: 'success',
