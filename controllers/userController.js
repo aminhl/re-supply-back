@@ -1,4 +1,5 @@
 const User = require("./../models/userModel");
+const Request = require("./../models/requestModel")
 const AppError = require("./../utils/appError");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
@@ -191,3 +192,55 @@ exports.searchChatUsers = async (req, res, next) => {
     res.status(500).send("Internal server error");
   }
 };
+
+exports.calculateRequestScores=async (req,res)=> {
+  // Get all requests
+  try
+  {
+    const requests = await Request.find();
+    const user = await User.findById(req.user.id);
+
+    const scores = [];
+    // Loop through requests
+    for (const request of requests) {
+      let score = 0;
+      const requester=await User.findById(request.requester_id);
+      if(requester.annualIncome!=-1){
+        if(requester.annualIncome==0){
+          score=+20;
+        }
+        if(requester.annualIncome>100){
+          score=+2;
+        }
+      }
+      if (request.type === 'Item') {
+        score += 5;
+      } else if (request.type === 'Currency') {
+        score += 3;
+      }
+
+      // Add points based on how close the target value is to the current value
+      const progressPercentage = request.currentValue / request.targetValue;
+      if (progressPercentage >= 0.5 && progressPercentage < 1) {
+        score += 5;
+      } else if (progressPercentage >= 1) {
+        score += 10;
+      }
+
+      scores.push({request: request._id, score});
+    }
+    user.scores = scores;
+    await user.save();
+  res.status(200).json({
+    status: "success",
+    data: {
+      user,
+    },
+  });
+}catch (err) {
+    return res.status(408).json({
+      status: "fail",
+      message: err,
+    });}
+
+}

@@ -38,6 +38,12 @@ const RequestSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
+        status:{
+            type: String,
+            enum: ['Pending', 'Achieved'],
+            required: true,
+            default:"Pending"
+        },
         notes: {
             type: String,
         },
