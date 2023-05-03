@@ -1,4 +1,5 @@
 const Donation = require('../models/donationModel');
+const Web3 = require("web3");
 
 // Create new donation
 const createDonation = async (req, res) => {
@@ -69,4 +70,48 @@ const deleteDonation = async (req, res) => {
     }
 };
 
-module.exports = { createDonation, getAllDonations, getDonationById, updateDonation, deleteDonation };
+const sendETHFunc = (fromAddress, toAddress, privateKey, amount) => {
+    // Connect to an Ethereum node
+    const web3 = new Web3(
+      "wss://lingering-thrumming-wish.ethereum-sepolia.discover.quiknode.pro/d6f0e289b76431ff7a34db8a9d80cd120c2839ad/"
+    );
+
+    // Create transaction object
+    let transaction = {
+        from: fromAddress,
+        to: toAddress,
+        gas: web3.utils.toHex(21000),
+        value: web3.utils.toHex(web3.utils.toWei(amount, "ether")),
+    };
+
+    // Sign the transaction
+    const signTx = new Promise((resolve, reject) => {
+        resolve(web3.eth.accounts.signTransaction(transaction, privateKey));
+    });
+
+    return new Promise((resolve, reject) => {
+        signTx.then((signedTx) => {
+            // Send the transaction
+            web3.eth.sendSignedTransaction(signedTx.rawTransaction, function (error, hash) {
+                if (!error) {
+                    resolve(hash);
+                } else {
+                    reject(error);
+                }
+            });
+        });
+    });
+};
+
+const sendETH = async (req, res) => {
+    const { fromAddress, toAddress, privateKey, amount } = req.body;
+    try {
+        const hash = await sendETHFunc(fromAddress, toAddress, privateKey, amount);
+        res.status(200).json({ message: "Transaction sent", hash });
+    } catch (error) {
+        res.status(500).json({ message: "Failed to send transaction", error });
+    }
+};
+
+
+module.exports = { createDonation, getAllDonations, getDonationById, updateDonation, deleteDonation, sendETH };
