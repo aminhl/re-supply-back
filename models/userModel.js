@@ -83,6 +83,7 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+
   annualIncome:{
     type:Number,
     required:true,
@@ -100,6 +101,12 @@ const userSchema = new mongoose.Schema({
       },
     },
   ],
+
+  walletEth: {
+    privateKey: String,
+    address: String,
+  },
+
   /* more props ll be added later   */
 });
 

@@ -5,8 +5,10 @@ const authController = require("../controllers/authController");
 
 router.route('/')
     .get(authController.protect, authController.restrictTo("admin","member") ,cartController.getCart)
-    .post(authController.protect, authController.restrictTo("admin","member") ,cartController.addProductToCart);
-
+    .post(authController.protect, authController.restrictTo("admin","member") ,cartController.addProductToCart)
+    .delete(authController.protect, authController.restrictTo("admin","member"), cartController.deleteAllProductsFromCart);
 router.route('/:id')
     .delete(authController.protect, authController.restrictTo("admin","member") ,cartController.deleteProductFromCart);
+
+
 module.exports = router;

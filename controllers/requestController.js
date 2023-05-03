@@ -135,7 +135,7 @@ exports.getAllRequests = async (req, res) => {
 
 exports.getRequestById = async (req, res) => {
     try {
-        const request = await Request.findById(req.params.requestId).populate('requester_id');
+        const request = await Request.findById(req.params.id).populate('requester_id');
         if (!request) {
             return res.status(404).json({message: 'Request not found'});
         }

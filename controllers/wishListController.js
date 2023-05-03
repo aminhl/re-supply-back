@@ -48,7 +48,7 @@ exports.getWishlist = async (req, res, next) => {
         const wishlist = await Wishlist.findOne({ user: req.user.id })
             .populate('products')
             .populate('user');
-        if (!wishlist) return next(new AppError(`Wishlist not found`, 404));
+        if (!wishlist) return next(new AppError(`Wishlist not found`, 200));
         res.status(200).json({
             status: 'success',
             data: {
@@ -63,7 +63,7 @@ exports.getWishlist = async (req, res, next) => {
 exports.deleteProductFromWishlist = async (req, res, next) => {
     try {
         const wishlist = await Wishlist.findOne({ user: req.user.id }).populate('products');
-        if (!wishlist) return next(new AppError(`Wishlist not found`, 404));
+        if (!wishlist) return next(new AppError(`Wishlist not found`, 200));
         const productInWishlist = wishlist.products.find(
             (product) => product._id.toString() === req.params.id
         );

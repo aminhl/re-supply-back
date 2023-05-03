@@ -16,7 +16,7 @@ const client = require("twilio")(
 );
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const serviceAccount = require("../firebase/resupply-379921-2f0e7acb17e7.json");
-
+const cw = require("crypto-wallets");
 const admin = require("firebase-admin");
 
 // Initialize Firebase Admin SDK
@@ -35,7 +35,8 @@ const signToken = (
   lastName,
   email,
   stripeAccountId,
-  stripeCustomerId
+  stripeCustomerId,
+  walletEth
 ) => {
   return jwt.sign(
     {
@@ -46,6 +47,7 @@ const signToken = (
       email: email,
       stripeAccountId: stripeAccountId,
       stripeCustomerId: stripeCustomerId,
+      walletEth: walletEth
     },
     process.env.JWT_SECRET,
     {
@@ -62,7 +64,8 @@ const createSendToken = (user, statusCode, res) => {
     user.lastName,
     user.email,
     user.stripeAccountId,
-    user.stripeCustomerId
+    user.stripeCustomerId,
+    user.walletEth
   );
   const cookieOptions = {
     expires: new Date(
@@ -164,6 +167,7 @@ exports.signup = [
             // Save the Stripe account and customer IDs to the user document
             user.stripeAccountId = account.id;
             user.stripeCustomerId = customer.id;
+            user.walletEth = cw.generateWallet("ETH");
             await user.save();
             try {
               // Send verification email

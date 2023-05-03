@@ -4,6 +4,10 @@ const Product = require("../models/productModel");
 const AppError = require("../utils/appError");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const User = require("../models/userModel");
+const Cart = require("../models/cartModel");
+const Wishlist = require("../models/wishListModel");
+const Request = require("../models/requestModel");
+
 
 exports.createOrder = async (req, res, next) => {
   try {
@@ -17,7 +21,7 @@ exports.createOrder = async (req, res, next) => {
 
     // Retrieve product data from the database
     const productData = await Promise.all(
-      products.map((product) => Product.findById(product.product))
+        products.map((product) => Product.findById(product.product))
     );
 
     // Create a line item for each product
@@ -44,9 +48,9 @@ exports.createOrder = async (req, res, next) => {
       line_items: lineItems,
       payment_intent_data: {
         application_fee_amount: lineItems.reduce(
-          (total, item) =>
-            total + item.price_data.unit_amount * item.quantity * 0.1,
-          0
+            (total, item) =>
+                total + item.price_data.unit_amount * item.quantity * 0.1,
+            0
         ),
         transfer_data: {
           destination: sellerStripeAccountId,
@@ -56,6 +60,23 @@ exports.createOrder = async (req, res, next) => {
       success_url: "http://localhost:4200/orderSuccess",
       cancel_url: "http://localhost:4200/cart",
     });
+
+    // Update the status of each product to "sold"
+    for (let i = 0; i < products.length; i++) {
+      await Product.findByIdAndUpdate(products[i].product, {
+        status: "sold",
+      });
+    }
+
+    // Reset the cart
+    const cart = await Cart.findOne({ user: req.user.id });
+    cart.products = [];
+    await cart.save();
+
+    // Reset the wishlist
+    const wishlist = await Wishlist.findOne({ user: req.user.id });
+    wishlist.products = [];
+    await wishlist.save();
 
     res.status(201).json({
       status: "success",
@@ -114,6 +135,21 @@ exports.createSingleOrder = async (req, res, next) => {
       cancel_url: "http://localhost:4200/products",
     });
 
+    // Update the status of the product to "sold"
+    await Product.findByIdAndUpdate(productId, {
+      status: "sold",
+    });
+
+    // Reset the cart
+    const cart = await Cart.findOne({ user: req.user.id });
+    cart.products = [];
+    await cart.save();
+
+    // Reset the wishlist
+    const wishlist = await Wishlist.findOne({ user: req.user.id });
+    wishlist.products = [];
+    await wishlist.save();
+
     res.status(201).json({
       status: "success",
       data: {
@@ -126,10 +162,6 @@ exports.createSingleOrder = async (req, res, next) => {
     return next(err);
   }
 };
-
-
-
-
 exports.getAllOrders = async (req, res, next) => {
   try {
     const orders = await Order.find().populate("products.product");
@@ -219,3 +251,80 @@ exports.updateOrder = async (req, res, next) => {
 exports.SuccessMessage = async (req, res, next) => {
   res.send("Success");
 };
+
+exports.donate = async (req, res, next) => {
+  try {
+    const { amount } = req.body;
+    const requestId = req.params.requestId;
+
+    // Find the request and the user making the donation
+    const request = await Request.findById(requestId);
+    const donor = await User.findById(req.user.id);
+
+    if (!request) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Request not found',
+      });
+    }
+
+    // Get the Stripe account IDs for the request owner and donor
+    const requestOwner = await User.findById(request.requester_id);
+    const requestOwnerAccountId = requestOwner?.stripeAccountId;
+    const donorAccountId = donor?.stripeAccountId;
+
+    if (!requestOwnerAccountId) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Request owner Stripe account ID not found',
+      });
+    }
+
+    if (!donorAccountId) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Donor Stripe account ID not found',
+      });
+    }
+
+    // Create a Checkout Session with the donation amount and request owner's Stripe account ID
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            unit_amount: amount * 100,
+            product_data: {
+              name: requestOwner.firstName + ' ' + requestOwner.lastName,
+            },
+          },
+          quantity: 1,
+        },
+      ],
+      payment_intent_data: {
+        application_fee_amount: amount * 100 * 0.1, // 10% fee for the platform
+        transfer_data: {
+          destination: requestOwnerAccountId,
+        },
+      },
+      mode: 'payment',
+      success_url: 'http://localhost:4200/orderSuccess',
+      cancel_url: 'http://localhost:4200/donation/',
+    });
+    // Update the request's current value and save it to the database
+    request.currentValue += +amount;
+    await request.save();
+    res.status(201).json({
+      status: 'success',
+      data: {
+        session_url: session.url,
+      },
+    });
+  } catch (err) {
+    return next(err);
+  }
+};
+
+
+

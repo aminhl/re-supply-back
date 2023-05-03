@@ -29,7 +29,7 @@ router
   );
 
 router
-  .route("/addGroup")
+  .route("/createGroup")
   .post(
     authController.protect,
     authController.restrictTo("admin", "member"),
@@ -43,7 +43,7 @@ router
     renameGroup
   );
 router
-  .route("/removeGroup")
+  .route("/removeFromGroup")
   .put(
     authController.protect,
     authController.restrictTo("admin", "member"),

@@ -14,10 +14,8 @@ if (!admin.apps.length) {
     admin.initializeApp();
 }
 const bucket = admin.storage().bucket();
-
 // Create the multer upload object
 const upload = multer();
-
 // Controller to create a new product
 exports.addProduct = [
     // Use multer middleware to handle the form data
@@ -125,9 +123,6 @@ exports.addProduct = [
         }
     },
 ];
-
-
-
 exports.getAllProducts = async (req, res, next) => {
     try {
         const products = await Product.find().populate('owner', 'firstName lastName email images');
@@ -142,8 +137,6 @@ exports.getAllProducts = async (req, res, next) => {
         return next(new AppError(err, 500));
     }
 };
-
-
 exports.getProduct = async (req, res, next) => {
   try {
     const product = await Product.findById(req.params.id).populate('owner', 'firstName lastName email images');
