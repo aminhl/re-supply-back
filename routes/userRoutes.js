@@ -100,5 +100,6 @@ router.post(
   authController.protect,
   authController.Sendmeetlink
 );
+router.post("/doScore", authController.protect,userController.calculateRequestScores);
 
 module.exports = router;
