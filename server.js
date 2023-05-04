@@ -22,6 +22,7 @@ const server = app.listen(port, () => {
   console.log(`ReSupply Application listening on port ${port}`);
 });
 const io = require("socket.io")(server, {
+  pingTimeout: 600000,
   cors: { origin: "http://localhost:4200" },
 });
 io.on("connection", (socket) => {
