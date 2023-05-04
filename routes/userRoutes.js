@@ -2,6 +2,7 @@ const express = require("express");
 const authController = require("../controllers/authController");
 const userController = require("../controllers/userController");
 const passport = require("passport");
+const requestController = require("../controllers/requestController");
 
 const router = express.Router();
 
@@ -101,5 +102,6 @@ router.post(
   authController.Sendmeetlink
 );
 router.post("/doScore", authController.protect,userController.calculateRequestScores);
+router.get('/:id',authController.protect, requestController.getRequestById);
 
 module.exports = router;

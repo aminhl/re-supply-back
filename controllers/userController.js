@@ -192,42 +192,96 @@ exports.searchChatUsers = async (req, res, next) => {
     res.status(500).send("Internal server error");
   }
 };
-
+const countryScores = {
+  'DZ': 2,
+  'AO': 3,
+  'BJ': 5,
+  'BW': 1,
+  'BF': 6,
+  'BI': 8,
+  'CV': 2,
+  'CM': 4,
+  'CF': 8,
+  'TD': 9,
+  'KM': 5,
+  'CD': 10,
+  'CG': 4,
+  'CI': 5,
+  'DJ': 6,
+  'EG': 2,
+  'GQ': 4,
+  'ER': 8,
+  'ET': 5,
+  'GA': 7,
+  'GM': 3,
+  'GH': 7,
+  'GN': 3,
+  'GW': 8,
+  'KE': 5,
+  'LS': 8,
+  'LR': 9,
+  'LY': 1,
+  'MG': 6,
+  'MW': 9,
+  'ML': 9,
+  'MR': 7,
+  'MU': 1,
+  'MA': 3,
+  'MZ': 8,
+  'NA': 3,
+  'NE': 10,
+  'NG': 5,
+  'RW': 7,
+  'ST': 4,
+  'SN': 6,
+  'SC': 1,
+  'SL': 8,
+  'SO': 10,
+  'ZA': 4,
+  'SS': 9,
+  'SD': 7,
+  'TZ': 7,
+  'TG': 7,
+  'TN': 2,
+  'UG': 6,
+  'ZM': 7,
+  'ZW': 8,
+};
 exports.calculateRequestScores=async (req,res)=> {
   // Get all requests
   try
   {
     const requests = await Request.find();
     const user = await User.findById(req.user.id);
-
     const scores = [];
     // Loop through requests
     for (const request of requests) {
       let score = 0;
       const requester=await User.findById(request.requester_id);
-      if(requester.annualIncome!=-1){
-        if(requester.annualIncome==0){
-          score=+20;
-        }
-        if(requester.annualIncome>100){
+      const requesterCountry = requester.country;
+      if(requester.annualIncome!==-1){
+        if(requester.annualIncome===0){
           score=+2;
         }
+        if(requester.annualIncome>100){
+          score=+1;
+        }
+      }
+      if(requester.verified){
+        score=+1;
       }
       if (request.type === 'Item') {
-        score += 5;
+        score +=2;
       } else if (request.type === 'Currency') {
-        score += 3;
+        score += 1;
       }
-
-      // Add points based on how close the target value is to the current value
-      const progressPercentage = request.currentValue / request.targetValue;
-      if (progressPercentage >= 0.5 && progressPercentage < 1) {
-        score += 5;
-      } else if (progressPercentage >= 1) {
-        score += 10;
+      if(requesterCountry){
+      if(countryScores[requesterCountry] < countryScores[user.country]){
+        score=+countryScores[user.country]-countryScores[requesterCountry]
       }
-
-      scores.push({request: request._id, score});
+      score=+ countryScores[requesterCountry]
+    }
+      scores.push({requestId: request._id, score});
     }
     user.scores = scores;
     await user.save();
