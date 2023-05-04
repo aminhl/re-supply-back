@@ -96,7 +96,9 @@ exports.signup = [
       phoneNumber,
       email,
       password,
+        country,
       confirmPassword,
+      annualIncome
     } = req.body;
     // Check if email already exists
     const existingUser = await User.findOne({ email });
@@ -147,7 +149,9 @@ exports.signup = [
               email,
               images: imageUrls,
               password,
+              country,
               confirmPassword,
+              annualIncome,
               passwordChangedAt: req.body.passwordChangedAt,
               emailVerificationToken: token,
               emailVerificationExpires: Date.now() + 24 * 60 * 60 * 1000, // Token expires in 24 hours
@@ -199,7 +203,9 @@ exports.signup = [
         email,
         images: [],
         password,
+        country,
         confirmPassword,
+        annualIncome,
         passwordChangedAt: req.body.passwordChangedAt,
         emailVerificationToken: token,
         emailVerificationExpires: Date.now() + 24 * 60 * 60 * 1000, // Token expires in 24 hours

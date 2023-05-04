@@ -5,7 +5,7 @@ const authController = require("../controllers/authController");
 
 
 router.get('/', requestController.getAllRequests);
-router.get('/:id', requestController.getRequestById);
+router.get('/:id',authController.protect, requestController.getRequestById);
 router.get('/owner-requests',authController.protect, requestController.getRequestsByOwner);
 router.delete('/:id', authController.protect, requestController.deleteRequest);
 router.post('/', authController.protect, requestController.addRequest);
