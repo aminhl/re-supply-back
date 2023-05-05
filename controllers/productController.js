@@ -253,7 +253,9 @@ exports.rejectProduct = async (req, res, next) => {
 };
 
 exports.getAcceptedProducts = async (req, res, next) => {
-    const products = await Product.find({status: 'accepted'}).populate('owner', 'firstName lastName email images'); // only accepted supplies
+    const userId = req.user.id; // get the ID of the authenticated user
+    const products = await Product.find({ status: 'accepted', owner: { $ne: userId } })
+        .populate('owner', 'firstName lastName email images'); // only accepted supplies, not owned by the current user
     try {
         res.status(200).json({
             status: 'success',
