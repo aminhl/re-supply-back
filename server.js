@@ -34,16 +34,17 @@ io.on("connection", (socket) => {
     socket.emit("connected");
   });
 
-  socket.on("join chat", (room) => {
-    socket.join(room);
-    console.log("User Joined Room: " + room);
+  socket.on("join chat", (roomId) => {
+    socket.join(roomId);
+    console.log("User Joined Room: " + roomId);
   });
 
-  socket.on("new message", (newMsg) => {
-    let chat = newMsg.chat;
+  socket.on("new message", (newMessageRecieved) => {
+    let chat = newMessageRecieved.chat;
     console.log("chat", chat);
-
-    io.to(chat._id).emit("message received", newMsg);
-    console.log("newmsg ", newMsg.content);
+    chat.users.forEach((user) => {
+      io.to(user._id).emit("getMsg", newMessageRecieved);
+      console.log("getMsg ", newMessageRecieved.content);
+    });
   });
 });
