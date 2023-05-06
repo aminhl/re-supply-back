@@ -2,70 +2,110 @@ const AppError = require("./../utils/appError");
 const multer = require("multer");
 const { Article } = require("../models/articleModel");
 const Comment = require("../models/commentModel");
-const Product = require("../models/productModel");
-const Request = require("../models/requestModel");
-const FILE_TYPE_MAP = {
-  "image/png": "png",
-  "image/jpeg": "jpeg",
-  "image/jpg": "jpg",
-};
-
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const isValid = FILE_TYPE_MAP[file.mimetype];
-    let uploadError = new Error("invalid image type");
-
-    if (isValid) {
-      uploadError = null;
-    }
-    cb(uploadError, "public/uploads/articles");
-  },
-  filename: function (req, file, cb) {
-    const fileName = file.originalname.split(" ").join("-");
-    const extension = FILE_TYPE_MAP[file.mimetype];
-    cb(null, `${fileName}-${Date.now()}.${extension}`);
-  },
-});
-
-const uploadOptions = multer({ storage: storage });
+const path = require('path');
+const fs = require('fs/promises');
+const { v4: uuidv4 } = require("uuid");
+const admin = require("firebase-admin");
+const User = require("../models/userModel");
+// Initialize the Firebase Admin SDK only once
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
+const bucket = admin.storage().bucket();
+// Create the multer upload object
+const upload = multer();
 
 exports.addArticle = [
-  uploadOptions.array("images"),
+  upload.array("images", 5), // Use multer middleware to handle the form data
   async (req, res, next) => {
-    const files = req.files;
-    const basePath = `${req.protocol}://${req.get("host")}/uploads/articles/`;
-
-    let imagesPaths = [];
-    if (files) {
-      files.map((file) => {
-        imagesPaths.push(`${basePath}${file.filename}`);
-      });
+    try {
+      const imageUrls = [];
+      if (req.files) {
+        for (const file of req.files) {
+          const extension = path.extname(file.originalname);
+          const filename = `${uuidv4()}${extension}`;
+          const fileRef = bucket.file(`articles/${filename}`);
+          const stream = fileRef.createWriteStream({
+            metadata: {
+              contentType: file.mimetype,
+            },
+          });
+          stream.on("error", (err) => {
+            console.log("Error uploading image: ", err);
+          });
+          stream.on("finish", async () => {
+            const FireBaseToken = uuidv4();
+            const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${process.env.FIREBASE_STORAGE_BUCKET}/o/articles%2F${filename}?alt=media&token=${FireBaseToken}`;
+            const imageUrlWithToken = await bucket
+                .file(`articles/${filename}`)
+                .getSignedUrl({
+                  action: "read",
+                  expires: "03-17-2024",
+                  virtualHostedStyle: true,
+                  query: {
+                    alt: "media",
+                    token: FireBaseToken,
+                  },
+                });
+            imageUrls.push(imageUrlWithToken[0]);
+            if (imageUrls.length === req.files.length) {
+              const article = new Article({
+                title: req.body.title,
+                description: req.body.description,
+                owner: req.params.ownerId,
+                images: imageUrls,
+              });
+              await article.save();
+              const popArticle = await Article.findById(article._id).populate(
+                  "owner",
+                  "firstName lastName email images"
+              );
+              res.status(201).json({
+                status: "success",
+                data: {
+                  article: popArticle,
+                },
+              });
+            }
+          });
+          stream.end(file.buffer);
+        }
+      }
+    } catch (err) {
+      console.log(err);
+      return res.status(500).send("The article cannot be created");
     }
-
-    let article = new Article({
-      title: req.body.title,
-      description: req.body.description,
-      owner: req.params.ownerId,
-      images: imagesPaths,
-    });
-    console.log(article);
-    console.log(req.params);
-    article = await article.save();
-    const popArticle = await Article.findById(article._id).populate(
-      "owner",
-      "firstName lastName email images"
-    );
-
-    if (!article) return res.status(500).send("The article cannot be created");
-
-    res.status(201).json({
-      status: "success",
-      data: {
-        article: popArticle,
-      },
-    });
   },
 ];
+
+
+exports.updateArticle = async (req, res, next) => {
+  try {
+    const { articleId } = req.params;
+
+    const updatedArticle = await Article.findByIdAndUpdate(
+        articleId,
+        {
+          title: req.body.title,
+          description: req.body.description,
+        },
+        { new: true, runValidators: true }
+    );
+
+    if (!updatedArticle) {
+      return next(new AppError('Could not find article to update', 404));
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        article: updatedArticle,
+      },
+    });
+  } catch (err) {
+    return next(err);
+  }
+};
 
 exports.getAllArticles = async (req, res, next) => {
   let criteria = {};
@@ -141,45 +181,6 @@ exports.deleteArticle = async (req, res, next) => {
     return next(new AppError(err, 500));
   }
 };
-
-exports.updateArticle = [
-  uploadOptions.array("images"),
-  async (req, res, next) => {
-    const files = req.files;
-    const basePath = `${req.protocol}://${req.get("host")}/uploads/articles/`;
-
-    let imagesPaths = [];
-    if (files) {
-      files.map((file) => {
-        imagesPaths.push(`${basePath}${file.filename}`);
-      });
-    }
-    try {
-      const article = await Article.findByIdAndUpdate(
-        req.params.id,
-
-        {
-          title: req.body.title,
-          description: req.body.description,
-          images: imagesPaths,
-        },
-        {
-          new: true,
-          runValidators: true,
-        }
-      );
-      if (!article) return next(new AppError(`Resource not found`, 404));
-      res.status(200).json({
-        status: "success",
-        data: {
-          article: article,
-        },
-      });
-    } catch (err) {
-      return next(new AppError(err, 500));
-    }
-  },
-];
 
 exports.approveArticle = async (req, res) => {
   try {
