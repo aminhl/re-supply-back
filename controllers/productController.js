@@ -5,10 +5,8 @@ const path = require('path');
 const fs = require('fs/promises');
 const serviceAccount = require("../firebase/resupply-379921-2f0e7acb17e7.json");
 const { v4: uuidv4 } = require("uuid");
-
 const admin = require("firebase-admin");
 const User = require("../models/userModel");
-
 // Initialize the Firebase Admin SDK only once
 if (!admin.apps.length) {
     admin.initializeApp();
@@ -156,51 +154,58 @@ exports.deleteProduct = async (req, res, next) => {
     const product = await Product.findByIdAndDelete(req.params.id);
     if (!product) return next(new AppError(`Product not found`, 404));
     res.status(204).json({
-      status: 'success',
-      message: 'Product deleted',
+      status: "success",
+      message: "Product deleted",
     });
   } catch (err) {
     return next(new AppError(err, 500));
   }
 };
 exports.updateProduct = [
-    // Use multer middleware to handle the form data
-    upload.array('images', 5),
+  // Use multer middleware to handle the form data
+  upload.array("images", 5),
 
-    async (req, res, next) => {
-        try {
-            // Find the product to update by ID
-            const product = await Product.findById(req.params.id);
+  async (req, res, next) => {
+    try {
+      // Find the product to update by ID
+      const product = await Product.findById(req.params.id);
 
-            if (!product) {
-                return next(new AppError('Product not found', 404));
-            }
+      if (!product) {
+        return next(new AppError("Product not found", 404));
+      }
 
-            // Delete the first image from the server if it exists
-            if (product.images.length > 0) {
-                const imagePath = path.join(__dirname, '..', 'public', product.images[0]);
-                await fs.unlink(imagePath);
-            }
+      // Delete the first image from the server if it exists
+      if (product.images.length > 0) {
+        const imagePath = path.join(
+          __dirname,
+          "..",
+          "public",
+          product.images[0]
+        );
+        await fs.unlink(imagePath);
+      }
 
-            // Update the product with the new data
-            product.name = req.body.name;
-            product.description = req.body.description;
-            product.price = req.body.price;
-            product.images = req.files ? req.files.map((file) => `/uploads/${file.filename}`) : [];
+      // Update the product with the new data
+      product.name = req.body.name;
+      product.description = req.body.description;
+      product.price = req.body.price;
+      product.images = req.files
+        ? req.files.map((file) => `/uploads/${file.filename}`)
+        : [];
 
-            // Save the updated product to the database
-            await product.save();
+      // Save the updated product to the database
+      await product.save();
 
-            res.status(200).json({
-                status: 'success',
-                data: {
-                    product
-                }
-            });
-        } catch (err) {
-            return next(err);
-        }
+      res.status(200).json({
+        status: "success",
+        data: {
+          product,
+        },
+      });
+    } catch (err) {
+      return next(err);
     }
+  },
 ];
 
 exports.getPendingProducts = async (req, res, next) => {
