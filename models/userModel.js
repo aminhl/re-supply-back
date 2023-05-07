@@ -104,9 +104,7 @@ const userSchema = new mongoose.Schema({
       },
     },
   ],
-
   walletEth: {
-    privateKey: String,
     address: String,
   },
 

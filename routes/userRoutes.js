@@ -103,5 +103,6 @@ router.post(
 );
 router.post("/doScore", authController.protect,userController.calculateRequestScores);
 router.get('/:id',authController.protect, requestController.getRequestById);
+router.put('/setWalletAddress', authController.protect, authController.setWalletAddress)
 
 module.exports = router;

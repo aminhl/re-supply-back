@@ -14,6 +14,8 @@ router.put('/:id', donationController.updateDonation);
 
 router.delete('/:id', donationController.deleteDonation);
 
-router.post("/sendETH/:requestId", donationController.sendETH);
+// router.post("/sendETH/:requestId", donationController.sendETH);
+
+router.post("/updateDonationRequest/:requestId", donationController.updateDonationRequest);
 
 module.exports = router;

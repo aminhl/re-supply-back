@@ -79,63 +79,27 @@ async function convertETHtoUSD(ethAmount) {
         const response = await axios
           .get('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd');
         const ethPrice = response.data.ethereum.usd;
-
         // Convert the ETH amount to USD
         const usdAmount = ethAmount * ethPrice;
-
         return usdAmount.toFixed(2); // Specify 2 decimal places for USD amount
     } catch (error) {
         console.error(error);
     }
 }
 
-const sendETHFunc = (fromAddress, toAddress, privateKey, amount) => {
-    // Connect to an Ethereum node
-    const web3 = new Web3(
-      "wss://lingering-thrumming-wish.ethereum-sepolia.discover.quiknode.pro/d6f0e289b76431ff7a34db8a9d80cd120c2839ad/"
-    );
-
-    // Create transaction object
-    let transaction = {
-        from: fromAddress,
-        to: toAddress,
-        gas: web3.utils.toHex(21000),
-        value: web3.utils.toHex(web3.utils.toWei(amount, "ether")),
-    };
-
-    // Sign the transaction
-    const signTx = new Promise((resolve, reject) => {
-        resolve(web3.eth.accounts.signTransaction(transaction, privateKey));
-    });
-
-    return new Promise((resolve, reject) => {
-        signTx.then((signedTx) => {
-            // Send the transaction
-            web3.eth.sendSignedTransaction(signedTx.rawTransaction, function (error, hash) {
-                if (!error) {
-                    resolve(hash);
-                } else {
-                    reject(error);
-                }
-            });
-        });
-    });
-};
-
-const sendETH = async (req, res) => {
+const updateDonationRequest = async (req, res) => {
     const requestId = req.params.requestId;
     const request = await Request.findById(requestId);
-    const { fromAddress, toAddress, privateKey, amount } = req.body;
+    const { amount } = req.body;
     try {
-        const hash = await sendETHFunc(fromAddress, toAddress, privateKey, amount);
         const usdAmount = await convertETHtoUSD(amount);
         request.currentValue += +usdAmount;
         await request.save();
-        res.status(200).json({ message: "Transaction sent", hash });
-    } catch (error) {
-        res.status(500).json({ message: "Failed to send transaction", error });
+        res.status(200).json({ message: "Transaction sent" });
+    } catch (error){
+        res.status(500).json({ message: "Transaction failed", error });
     }
 };
 
 
-module.exports = { createDonation, getAllDonations, getDonationById, updateDonation, deleteDonation, sendETH };
+module.exports = { createDonation, getAllDonations, getDonationById, updateDonation, deleteDonation, updateDonationRequest };

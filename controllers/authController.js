@@ -16,8 +16,8 @@ const client = require("twilio")(
 );
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const serviceAccount = require("../firebase/resupply-379921-2f0e7acb17e7.json");
-const cw = require("crypto-wallets");
 const admin = require("firebase-admin");
+const { response } = require("express");
 
 // Initialize Firebase Admin SDK
 admin.initializeApp({
@@ -171,7 +171,7 @@ exports.signup = [
             // Save the Stripe account and customer IDs to the user document
             user.stripeAccountId = account.id;
             user.stripeCustomerId = customer.id;
-            user.walletEth = cw.generateWallet("ETH");
+            user.walletEth = { address: ""};
             await user.save();
             try {
               // Send verification email
@@ -847,3 +847,9 @@ exports.Sendmeetlink =async (req,res,next) =>{
     );
   }
 }
+
+exports.setWalletAddress = async (req, res) => {
+  const user = await User.findByIdAndUpdate(req.user.id, { walletEth: { address: req.body.walletAddress} });
+  const userUpdated = await User.findById(req.user.id)
+  createSendToken(userUpdated, 200, res);
+};
