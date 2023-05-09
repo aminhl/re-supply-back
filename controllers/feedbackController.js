@@ -6,6 +6,7 @@ exports.addFeedback = async (req, res, next) => {
         user: req.user.id,
         title: req.body.title,
         message: req.body.message,
+        category: req.body.category,
     });
     try {
         res.status(201).json({
@@ -73,6 +74,38 @@ exports.updateFeedback = async (req, res, next) => {
         res.status(200).json({
         status: 'success',
         message: 'Feedback updated',
+        });
+    } catch (err) {
+        return next(new AppError(err, 500));
+    }
+}
+exports.getPositiveFeedbacks = async (req, res, next) => {
+    try {
+        const positiveFeedbacks = await Feedback.find({
+            category: 'positive',
+        }).populate('user', 'firstName lastName email images '); // assuming the user field is a reference to the User model
+
+        res.status(200).json({
+            status: 'success',
+            data: {
+                feedbacks: positiveFeedbacks,
+            },
+        });
+    } catch (err) {
+        return next(new AppError(err, 500));
+    }
+}
+exports.getNegativeFeedbacks = async (req, res, next) => {
+    try {
+        const positiveFeedbacks = await Feedback.find({
+            category: 'negative',
+        }).populate('user', 'firstName lastName email images '); // assuming the user field is a reference to the User model
+
+        res.status(200).json({
+            status: 'success',
+            data: {
+                feedbacks: positiveFeedbacks,
+            },
         });
     } catch (err) {
         return next(new AppError(err, 500));

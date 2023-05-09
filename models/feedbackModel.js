@@ -13,6 +13,9 @@ const feedbackSchema = new mongoose.Schema({
     message: {
         type: String,
         required: [true, 'A feedback must have a message'],
+    },
+    category: {
+        type: String,
     }
 
 });
