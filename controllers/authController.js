@@ -47,7 +47,7 @@ const signToken = (
       email: email,
       stripeAccountId: stripeAccountId,
       stripeCustomerId: stripeCustomerId,
-      walletEth: walletEth
+      walletEth: walletEth,
     },
     process.env.JWT_SECRET,
     {
@@ -96,9 +96,9 @@ exports.signup = [
       phoneNumber,
       email,
       password,
-        country,
+      country,
       confirmPassword,
-      annualIncome
+      annualIncome,
     } = req.body;
     // Check if email already exists
     const existingUser = await User.findOne({ email });
@@ -282,7 +282,17 @@ exports.disable2FA = async (req, res) => {
 exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
+    const active = await User.findOne({ email }).select("active");
 
+    if (!active) {
+      return next(
+        new AppError(
+          `Your Account Has Been Banned Check Your Situation With Our Support Client`,
+          500
+        )
+      );
+      console.log("acti", active);
+    }
     // 1) Check if email & password exist
     if (!email || !password) {
       return next(new AppError(`Please provide an email and password`, 500));
@@ -828,9 +838,9 @@ exports.signupoAuth = [
     }
   },
 ];
-exports.Sendmeetlink =async (req,res,next) =>{
+exports.Sendmeetlink = async (req, res, next) => {
   try {
-    const { url,email } = req.body;
+    const { url, email } = req.body;
     // Send verification email
     await sendEmail({
       email: email,
@@ -846,4 +856,4 @@ exports.Sendmeetlink =async (req,res,next) =>{
       )
     );
   }
-}
+};
