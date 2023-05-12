@@ -68,15 +68,19 @@ exports.createOrder = async (req, res, next) => {
       });
     }
 
-    // Reset the cart
+    // Reset the cart if it exists
     const cart = await Cart.findOne({ user: req.user.id });
-    cart.products = [];
-    await cart.save();
+    if (cart) {
+      cart.products = [];
+      await cart.save();
+    }
 
-    // Reset the wishlist
+    // Reset the wishlist if it exists
     const wishlist = await Wishlist.findOne({ user: req.user.id });
-    wishlist.products = [];
-    await wishlist.save();
+    if (wishlist) {
+      wishlist.products = [];
+      await wishlist.save();
+    }
 
     res.status(201).json({
       status: "success",
@@ -95,6 +99,7 @@ exports.createSingleOrder = async (req, res, next) => {
     const productId = req.body.productId;
     const product = await Product.findById(productId);
     console.log(product);
+    console.log(productId)
 
     // Create new order
     const order = await Order.create({
@@ -140,15 +145,19 @@ exports.createSingleOrder = async (req, res, next) => {
       status: "sold",
     });
 
-    // Reset the cart
+    // Reset the cart if it exists
     const cart = await Cart.findOne({ user: req.user.id });
-    cart.products = [];
-    await cart.save();
+    if (cart) {
+      cart.products = [];
+      await cart.save();
+    }
 
-    // Reset the wishlist
+    // Reset the wishlist if it exists
     const wishlist = await Wishlist.findOne({ user: req.user.id });
-    wishlist.products = [];
-    await wishlist.save();
+    if (wishlist) {
+      wishlist.products = [];
+      await wishlist.save();
+    }
 
     res.status(201).json({
       status: "success",
@@ -162,6 +171,7 @@ exports.createSingleOrder = async (req, res, next) => {
     return next(err);
   }
 };
+
 exports.getAllOrders = async (req, res, next) => {
   try {
     const orders = await Order.find().populate("products.product");
