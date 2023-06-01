@@ -89,7 +89,6 @@ const userSchema = new mongoose.Schema({
 
   annualIncome:{
     type:Number,
-    required:true,
     default:-1
   },
   scores: [
@@ -131,8 +130,8 @@ userSchema.pre(/^find/, function (next) {
 });
 
 userSchema.methods.correctPassword = async function (
-  candidatePassword,
-  userPassword
+    candidatePassword,
+    userPassword
 ) {
   return await bcrypt.compare(candidatePassword, userPassword);
 };
@@ -146,9 +145,9 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
 userSchema.methods.createPasswordResetToken = function () {
   const resetToken = crypto.randomBytes(32).toString("hex");
   this.passwordResetToken = crypto
-    .createHash("sha256")
-    .update(resetToken)
-    .digest("hex");
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
   this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
   return resetToken;
 };

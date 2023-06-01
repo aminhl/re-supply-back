@@ -54,20 +54,20 @@ exports.updateProfile = async (req, res, next) => {
   // 1) Create error if user POSTed password
   if (req.body.password || req.body.confirmPassword)
     return next(
-      new AppError(
-        `This route is not for password update. Please use /updatePassword`,
-        400
-      )
+        new AppError(
+            `This route is not for password update. Please use /updatePassword`,
+            400
+        )
     );
   // 2) Update user document
 
   const filtredBody = filterObj(
-    req.body,
-    "firstName",
-    "lastName",
-    "phoneNumber",
-    "email",
-    "images"
+      req.body,
+      "firstName",
+      "lastName",
+      "phoneNumber",
+      "email",
+      "images"
   );
   console.log(filtredBody);
   const updatedUser = await User.findByIdAndUpdate(req.user.id, filtredBody, {
@@ -176,14 +176,14 @@ exports.upgradeToAdmin = async (req, res) => {
 exports.searchChatUsers = async (req, res, next) => {
   try {
     const keyword = req.query.search
-      ? {
+        ? {
           $or: [
             { firstName: { $regex: req.query.search, $options: "i" } },
             { lastName: { $regex: req.query.search, $options: "i" } },
             { email: { $regex: req.query.search, $options: "i" } },
           ],
         }
-      : {};
+        : {};
 
     const users = await User.find(keyword).find({ _id: { $ne: req.user._id } });
     res.send(users);
@@ -193,59 +193,59 @@ exports.searchChatUsers = async (req, res, next) => {
   }
 };
 const countryScores = {
-  'DZ': 2,
-  'AO': 3,
-  'BJ': 5,
-  'BW': 1,
-  'BF': 6,
-  'BI': 8,
-  'CV': 2,
-  'CM': 4,
-  'CF': 8,
-  'TD': 9,
-  'KM': 5,
-  'CD': 10,
-  'CG': 4,
-  'CI': 5,
-  'DJ': 6,
-  'EG': 2,
-  'GQ': 4,
-  'ER': 8,
-  'ET': 5,
-  'GA': 7,
-  'GM': 3,
-  'GH': 7,
-  'GN': 3,
-  'GW': 8,
-  'KE': 5,
-  'LS': 8,
-  'LR': 9,
-  'LY': 1,
-  'MG': 6,
-  'MW': 9,
-  'ML': 9,
-  'MR': 7,
-  'MU': 1,
-  'MA': 3,
-  'MZ': 8,
-  'NA': 3,
-  'NE': 10,
-  'NG': 5,
-  'RW': 7,
-  'ST': 4,
-  'SN': 6,
-  'SC': 1,
-  'SL': 8,
-  'SO': 10,
-  'ZA': 4,
-  'SS': 9,
-  'SD': 7,
-  'TZ': 7,
-  'TG': 7,
-  'TN': 2,
-  'UG': 6,
-  'ZM': 7,
-  'ZW': 8,
+  'DZ': 21,
+  'AO': 35,
+  'BJ': 52,
+  'BW': 16,
+  'BF': 62,
+  'BI': 80,
+  'CV': 23,
+  'CM': 41,
+  'CF': 84,
+  'TD': 93,
+  'KM': 59,
+  'CD': 17,
+  'CG': 46,
+  'CI': 54,
+  'DJ': 60,
+  'EG': 27,
+  'GQ': 46,
+  'ER': 82,
+  'ET': 58,
+  'GA': 77,
+  'GM': 33,
+  'GH': 78,
+  'GN': 36,
+  'GW': 88,
+  'KE': 53,
+  'LS': 84,
+  'LR': 97,
+  'LY': 15,
+  'MG': 61,
+  'MW': 95,
+  'ML': 96,
+  'MR': 78,
+  'MU': 18,
+  'MA': 38,
+  'MZ': 81,
+  'NA': 33,
+  'NE': 107,
+  'NG': 53,
+  'RW': 77,
+  'ST': 48,
+  'SN': 69,
+  'SC': 104,
+  'SL': 89,
+  'SO': 103,
+  'ZA': 44,
+  'SS': 98,
+  'SD': 76,
+  'TZ': 78,
+  'TG': 79,
+  'TN': 27,
+  'UG': 62,
+  'ZM': 73,
+  'ZW': 85,
 };
 exports.calculateRequestScores=async (req,res)=> {
   // Get all requests
@@ -268,30 +268,30 @@ exports.calculateRequestScores=async (req,res)=> {
         }
       }
       if(requester.verified){
-        score=+1;
+        score=+100;
       }
       if (request.type === 'Item') {
-        score +=2;
+        score +=200;
       } else if (request.type === 'Currency') {
-        score += 1;
+        score += 100;
       }
       if(requesterCountry){
-      if(countryScores[requesterCountry] < countryScores[user.country]){
-        score=+countryScores[user.country]-countryScores[requesterCountry]
+        if(countryScores[requesterCountry] < countryScores[user.country]){
+          score=+countryScores[user.country]-countryScores[requesterCountry]
+        }
+        score=+ countryScores[requesterCountry]
       }
-      score=+ countryScores[requesterCountry]
-    }
       scores.push({requestId: request._id, score});
     }
     user.scores = scores;
     await user.save();
-  res.status(200).json({
-    status: "success",
-    data: {
-      user,
-    },
-  });
-}catch (err) {
+    res.status(200).json({
+      status: "success",
+      data: {
+        user,
+      },
+    });
+  }catch (err) {
     return res.status(408).json({
       status: "fail",
       message: err,
